@@ -15,6 +15,9 @@ resources:
   - namespace.yaml
   - site-data.yaml
 
+patchesStrategicMerge:
+  - ingress-patch.yaml
+
 images:
   # - name: postgres
     # newName: my-registry/my-postgres

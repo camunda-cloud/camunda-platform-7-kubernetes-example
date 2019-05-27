@@ -8,14 +8,14 @@ metadata:
     kubernetes.io/tls-acme: true
 spec:
   rules:
-  - host: $(HOSTNAME)
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: camunda-bpm
-          servicePort: http
+    - host: $(HOSTNAME)
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: camunda-bpm
+              servicePort: http
   tls:
-  - hosts:
-    - $(HOSTNAME)
-    secretName: $(HOSTNAME)-tls
+    - hosts:
+      - $(HOSTNAME)
+      secretName: $(HOSTNAME)-tls

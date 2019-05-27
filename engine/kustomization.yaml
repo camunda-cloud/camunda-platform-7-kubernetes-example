@@ -7,9 +7,10 @@ commonLabels:
 
 resources:
   - deployment.yaml
+  - ingress.yaml
   - service.yaml
 
 configMapGenerator:
-- name: camunda-bpm-config
-  files:
-  - prometheus-jmx-config.yaml
+  - name: camunda-bpm-config
+    files:
+      - prometheus-jmx-config.yaml
