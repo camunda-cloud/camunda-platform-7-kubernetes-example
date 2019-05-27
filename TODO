@@ -7,11 +7,34 @@ add tls
 add external dns
 add redis
 add patches to startup script
-add prometheus
+enable REST API auth
+change demo/demo password
+add prometheus sidecar
+https://github.com/prometheus/jmx_exporter
 deal with secrets - simplest to script rand create, then kubectl apply -f
  * still broken with helm
 add hpa, only with sticky sessions or redis
 EE?
+
+# assumptions
+people who want to install camunda on kubernetes already use kubernetes
+  - they have standard practices for:
+    - cluster setup
+    - databases
+    - secrets
+    - certificates
+    - dns
+    - delivery
+# possible followups
+    - scaling
+      - session caching with redis
+      - hpa
+    - database operators - vitess / mysql / postgres
+    - ssl
+    - external-dns
+    - service mesh
+
+AJP tomcat?
 
 cat <<EOF | kubectl create -f -
 apiVersion: v1

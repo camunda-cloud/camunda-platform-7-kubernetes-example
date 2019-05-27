@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: site-data
+data:
+  # the fqdn of your ingress path
+  hostname: a.real.domain.com
+
+  # cert-manager:
+  # cert-provider must match your issuer
+  # kubectl get issuers.certmanager.k8s.io --all-namespaces
+
+  certmanager-provider: lets-encrypt-staging

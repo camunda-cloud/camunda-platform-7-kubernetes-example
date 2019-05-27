@@ -5,10 +5,13 @@ namespace: camunda-bpm-demo
 
 # Labels to add to all resources and selectors.
 commonLabels:
-  app.kubernetes.io/name: camunda-bpm-demo
+  app.kubernetes.io/env: demo
+  app.kubernetes.io/app: camunda-bpm
+
+bases:
+  - ./engine
 
 resources:
-  - ./engine
   - namespace.yaml
 
 images:

@@ -4,10 +4,12 @@ kind: Kustomization
 # Labels to add to all resources and selectors.
 commonLabels:
   app.kubernetes.io/component: engine
+
 resources:
   - deployment.yaml
+  - service.yaml
 
 configMapGenerator:
 - name: camunda-bpm-config
   files:
-  - engine/prometheus-jmx-config.yaml
+  - prometheus-jmx-config.yaml
