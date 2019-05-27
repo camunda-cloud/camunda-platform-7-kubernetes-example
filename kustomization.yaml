@@ -4,13 +4,20 @@ kind: Kustomization
 namespace: camunda-bpm-demo
 
 resources:
-  -
-imagecamunda/camunda-bpm-platform:7.11.0
+  - engine/deployment.yaml
+
+images:
+  # - name: postgres
+    # newName: my-registry/my-postgres
+    # newTag: v1
+  - name: camunda-bpm
+    newName: camunda/camunda-bpm-platform
+    newTag: tomcat-7.11.0
 
 configMapGenerator:
 - name: camunda-bpm-config
   files:
-  - prometheus-jmx-config.yaml
+  - engine/prometheus-jmx-config.yaml
 
 # patchesStrategicMerge:
 # - service_port_8888.yaml
