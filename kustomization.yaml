@@ -13,6 +13,7 @@ bases:
 
 resources:
   - namespace.yaml
+  - site-data.yaml
 
 images:
   # - name: postgres
@@ -26,16 +27,7 @@ vars:
   - name: HOSTNAME
     fieldref:
       fieldPath: data.hostname
-  - name: CERTISSUER
-    fieldref:
-      fieldPath: data.certIssuer
-  - name: TLSACME
-    fieldref:
-      fieldPath: data.tlsAcme
-  - name: INGRESSCLASS
-    fieldref:
-      fieldPath: data.ingressClass
     objref:
       apiVersion: v1
       kind: ConfigMap
-      name: site-config
+      name: site-data
