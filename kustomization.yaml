@@ -21,3 +21,21 @@ images:
   - name: camunda-bpm
     newName: camunda/camunda-bpm-platform
     newTag: tomcat-7.11.0
+
+vars:
+  - name: HOSTNAME
+    fieldref:
+      fieldPath: data.hostname
+  - name: CERTISSUER
+    fieldref:
+      fieldPath: data.certIssuer
+  - name: TLSACME
+    fieldref:
+      fieldPath: data.tlsAcme
+  - name: INGRESSCLASS
+    fieldref:
+      fieldPath: data.ingressClass
+    objref:
+      apiVersion: v1
+      kind: ConfigMap
+      name: site-config
