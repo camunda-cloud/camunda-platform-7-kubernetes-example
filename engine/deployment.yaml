@@ -1,0 +1,39 @@
+apiVersion: app/v1
+kind: Deployment
+metadata:
+  name: camunda-bpm
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    spec:
+      volumes:
+      containers:
+        - name: camunda-bpm
+          image: camunda-bpm
+          securityContext:
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 8080
+              name: http
+          livenessProbe:
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            httpGet:
+              path: /camunda
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            httpGet:
+              path: /camunda
+              port: http
+          resources:
+            requests:
+              cpu: 300m
+              memory: 512Mi
+            limits:
+              memory: 512Mi

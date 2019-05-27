@@ -1,0 +1,65 @@
+camunda/camunda-bpm-platform:7.11.0
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: camunda-platform
+  namespace: cambpm
+  labels:
+    app: camunda-platform
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: camunda-platform
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: '18080'
+    spec:
+      restartPolicy: Always
+      volumes:
+        - name: prometheus-jmx-config
+          readOnly: true
+          configMap:
+            name: prom-jmx
+      containers:
+        - name: camunda-bpm
+          image: camunda-bpm
+          imagePullPolicy: Always
+          command: ["/etc/config/configure-and-run.sh"]
+          securityContext:
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 9404
+              name: metrics
+          env:
+            - name: CATALINA_OPTS
+              value: -javaagent:lib/jmx_prometheus_javaagent-0.11.0.jar=9404:/etc/config/prometheus-jmx-config.yml
+          livenessProbe:
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            httpGet:
+              path: /camunda
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            httpGet:
+              path: /camunda
+              port: http
+          resources:
+            requests:
+              cpu: 300m
+              memory: 512Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - mountPath: /etc/config/
+              name: config

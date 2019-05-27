@@ -1,0 +1,28 @@
+basic deployment with built-in db
+set engine USER PASSWORD
+add ingress
+add postgress or cloudsql
+set DB_USERNAME DB_PASSWORD in engine
+add tls
+add external dns
+add redis
+add patches to startup script
+add prometheus
+deal with secrets - simplest to script rand create, then kubectl apply -f
+ * still broken with helm
+add hpa, only with sticky sessions or redis
+EE?
+
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  MYSQL_PASSWORD: $(head -c 24 /dev/random | base64)
+  MYSQL_ROOT_PASSWORD: $(head -c 24 /dev/random | base64)
+stringData:
+  MYSQL_USER: my_user
+  MYSQL_DATABASE: my_db
+EOF
