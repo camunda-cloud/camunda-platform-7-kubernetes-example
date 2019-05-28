@@ -9,7 +9,7 @@ commonLabels:
   app.kubernetes.io/app: camunda-bpm
 
 bases:
-  - ./engine
+  - ./platform
 
 resources:
   - namespace.yaml
@@ -17,14 +17,6 @@ resources:
 
 patchesStrategicMerge:
   - ingress-patch.yaml
-
-images:
-  # - name: postgres
-    # newName: my-registry/my-postgres
-    # newTag: v1
-  - name: camunda-bpm
-    newName: camunda/camunda-bpm-platform
-    newTag: tomcat-7.11.0
 
 vars:
   - name: HOSTNAME

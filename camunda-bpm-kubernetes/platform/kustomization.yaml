@@ -3,12 +3,17 @@ kind: Kustomization
 
 # Labels to add to all resources and selectors.
 commonLabels:
-  app.kubernetes.io/component: engine
+  app.kubernetes.io/component: platform
 
 resources:
   - deployment.yaml
   - ingress.yaml
   - service.yaml
+
+images:
+  - name: camunda-bpm
+    newName: camunda/camunda-bpm-platform
+    newTag: tomcat-7.11.0
 
 configMapGenerator:
   - name: camunda-bpm-config
