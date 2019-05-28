@@ -10,11 +10,6 @@ resources:
   - ingress.yaml
   - service.yaml
 
-images:
-  - name: camunda-bpm
-    newName: camunda/camunda-bpm-platform
-    newTag: tomcat-7.11.0
-
 configMapGenerator:
   - name: config
     files:
