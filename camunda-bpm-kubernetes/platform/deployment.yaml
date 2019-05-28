@@ -10,6 +10,11 @@ spec:
       maxUnavailable: 1
   template:
     spec:
+      volumes:
+        - name: config
+          configMap:
+            name: config
+            defaultMode: 0744
       containers:
         - name: camunda-bpm
           image: camunda-bpm
@@ -21,9 +26,6 @@ spec:
               name: http
             - containerPort: 9404
               name: metrics
-          env:
-            - name: CATALINA_OPTS
-              value: -javaagent:lib/jmx_prometheus_javaagent-0.11.0.jar=9404:/etc/config/prometheus-jmx-config.yml
           volumeMounts:
             - mountPath: /etc/config/
               name: config

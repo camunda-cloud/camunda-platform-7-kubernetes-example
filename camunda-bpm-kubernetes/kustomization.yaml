@@ -15,11 +15,6 @@ resources:
   - namespace.yaml
   - site-data.yaml
 
-# prometheus jmx container adds the jar
-images:
-  - name: prometheus-jmx-exporter
-  - newName: gcr.io/camunda-cloud-240911/prometheus-jmx-exporter
-
 # set url specific data and configure tls
 patchesStrategicMerge:
   - ingress-patch.yaml

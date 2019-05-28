@@ -2,8 +2,8 @@ apiVersion: skaffold/v1beta11
 kind: Config
 build:
   artifacts:
-  - image: gcr.io/camunda-cloud-240911/prometheus-jmx-exporter
-    context: ./images/prometheus-jmx-exporter
+  - image: gcr.io/camunda-cloud-240911/camunda-bpm
+    context: ./images/camunda-bpm
   googleCloudBuild: {}
   tagPolicy:
     sha256: {}

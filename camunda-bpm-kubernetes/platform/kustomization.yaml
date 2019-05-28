@@ -16,6 +16,6 @@ images:
     newTag: tomcat-7.11.0
 
 configMapGenerator:
-  - name: camunda-bpm-config
+  - name: config
     files:
-      - prometheus-jmx-config.yaml
+      - config/prometheus-jmx.yaml
