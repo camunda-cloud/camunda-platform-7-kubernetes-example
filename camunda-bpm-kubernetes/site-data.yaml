@@ -8,5 +8,5 @@ data:
   ##### ingress
   # the fqdn of your ingress path
 
-  hostname: camunda.example.com
+  hostname: bpm.cc.alfirth.com
 
