@@ -3,9 +3,10 @@ kind: ConfigMap
 metadata:
   name: site-data
 data:
-
-  # values here are passed as variables to ingress-patch.yaml by kustomize
+  # values here can be added as variables to kustomize
 
   ##### ingress
   # the fqdn of your ingress path
-  hostname: a.real.domain.com
+
+  hostname: camunda.example.com
+
