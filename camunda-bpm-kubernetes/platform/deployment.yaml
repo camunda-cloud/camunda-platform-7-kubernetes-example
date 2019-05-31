@@ -9,6 +9,9 @@ spec:
     rollingUpdate:
       maxUnavailable: 1
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/app: camunda-bpm
     spec:
       volumes:
         - name: config
