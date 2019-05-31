@@ -49,12 +49,47 @@ We'll address several areas where we can configure the Camunda BPM docker image 
 
 We will go through some techniques to address these, and show a workflow that might work for you.
 
+## Workflows
+
+Three workflows are available
+1. Kustomize + Kubectl
+2. Skaffold + Kustomize + Kubectl + optionally
+3. Kubectl only
+
+See the Prerequisites for information on installing these packages
+
+### Basic Workflow
+
+(requires Kustomize>7a1a231 & kubectl)
+Kustomize handles overlaying the yaml files (providing similar flexibility as helm), but allowing you to extend arbitrarily rather than relying on the chart maintainer adding your particular change to the go template, or requiring you to keep a fork. Since 1.14, it's available in kubectl, but you should install it from HEAD for the time being. Kustomize generates manifests for kubectl, which we pipe through: `kustomize build | kubectl apply --dry-run -o yaml -f -` will show you whats going on (aka `make dry-run`). This doesn't build the docker image. This is the default behaviour of `make`.
+
+> **Note:** Kustomize variable handling is still relatively new. Although kustomize is now included in kubectl as `kubectl apply -k`, as of 1.14.2 you still need to `go get sigs.k8s.io/kustomize` for the `$HOSTNAME` to work. If that's not an option, you can hardcode the variable references in  `ingress-patch.yaml`
+
+### Development Workflow
+
+```mermaid
+sequenceDiagram
+skaffold->> google cloud build: upload Dockerfile & context
+google cloud build-->> skaffold: return built image tag
+skaffold->> kustomize: rewrite manifests with new tag
+kustomize->> kubernetes: upload manifests
+kubernetes->> google cloud build: pull new image from gcr.io
+```
+
+(requires Kustomize>7a1a231, kubectl, and Skaffold)
+If your workflow is currently painful, you might want to try skaffold. It has good support for a variety of templating tools (like Kustomize and Helm), CI and build tools, and infrastructure providers. The `skaffold.yaml` included is configured for google cloud build and GKE, which provides a very easy way to get going on production grade infrastructure. You'll need to change the image name to your GCP project-id if you want to use it. Then `skaffold run` aka `make skaffold` will upload the Dockerfile context to cloudbuild, build the image and save it to GCR, then apply the manifests to your cluster. You still need kustomize from HEAD. This is the behaviour of `make skaffold`, but skaffold has many other capabilities.
+
+### Manifests Only Workflow
+
+(requires kubectl)
+If you don't want to use kustomize or skaffold, you can refer to the manifests in `generated-manifest.yaml`, and adapt them to the workflow of your choice.
+
 ## Prerequisites
 
 - A working [Kubernetes](https://kubernetes.io/) cluster
   - [GKE](https://cloud.google.com/free/) or minikube are a good way to get started
-- [Optional] [Kustomize > 2.0.3](https://github.com/kubernetes-sigs/kustomize) for managing yaml overlays without forking the whole manifest, allowing you to `git pull --rebase` future improvements
-  - Variable support in the ingress was added after 2.0.3 was released, so for now and make sure that [go installed binaries are available on your PATH](https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a) and `go get sigs.k8s.io/kustomize`
+- [Optional] [Kustomize > 7a1a231](https://github.com/kubernetes-sigs/kustomize) for managing yaml overlays without forking the whole manifest, allowing you to `git pull --rebase` future improvements
+  - Variable support in the ingress was added after 2.0.3 was released, so for now make sure that [go installed binaries are available on your PATH](https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a) and `go get sigs.k8s.io/kustomize`
  - [Optional] [Skaffold](https://skaffold.dev/) for building your own docker images and deploying easily to GKE
    - download the latest release
      - `curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
@@ -62,8 +97,6 @@ We will go through some techniques to address these, and show a workflow that mi
     - if you're using [google cloud build](https://console.cloud.google.com/cloud-build/), then
      - `gcloud auth application-default login`
   - otherwise configure `skaffold.yaml` for your providers
-
-## Basic Workflow
 
 ## Logs and Metrics
 
@@ -133,28 +166,10 @@ Nice. All files we add to the ConfigMapGenerator will be exposed in the new `/et
 ### Logs
 Great news! The application logs are already available on `stdout`, for example with `kubectl logs`. Fluentd (installed by default on GKE) will forward your logs to Elasticsearch, Loki, or your enterprise log platform. If you want to jsonify your logs, you could follow the pattern above to [set up logback.](https://forum.camunda.org/t/camunda-json-logging-for-shared-engine-solved/8651)
 
-# How to run on Kubernetes - manifests (plain)
 
-> **Note:** Kustomize variable handling is still relatively new. Although kustomize is now included in kubectl as `kubectl apply -k`, as of 1.14.2 you still need to `go get sigs.k8s.io/kustomize` for the `$HOSTNAME` to work. If that's not an option, you can hardcode the variable references in  `ingress-patch.yaml`
 
 > **Note:** Secret value plugins are [available now in kustomize](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere). This allows you to populate them from sources such as existing kube-secrets or vault. Check it out!
 
-```mermaid
-sequenceDiagram
-skaffold->> google cloud build: upload Dockerfile & context
-google cloud build-->> skaffold: return built image tag
-skaffold->> kustomize: rewrite manifests with new tag
-kustomize->> kubernetes: upload manifests
-kubernetes->> google cloud build: pull new image from gcr.io
-```
-```mermaid
-sequenceDiagram
-skaffold->> google cloud build: upload Dockerfile & context
-google cloud build-->> skaffold: return built image tag
-skaffold->> kustomize: rewrite manifests with new tag
-kustomize->> kubernetes: upload manifests
-kubernetes->> google cloud build: pull new image from gcr.io
-```
 ```
 .
 ├── Makefile
