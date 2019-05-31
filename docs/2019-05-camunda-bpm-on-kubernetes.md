@@ -6,22 +6,26 @@
 - TODO rewrite image name
 - TODO rewrite repo links
 - Need to scrub camunda-cloud-240911 from files
-- Use xmlstarlet
 - Include whole manifest for those who don't want kustomise
 - Note about prometheus configuration servicemonitors
 
  ## Authors
+
 [Alastair Firth](https://github.com/afirth) is a Senior Site Reliability Engineer on the Camunda Cloud team.
 [Lars Lange](https://github.com/Langleu) is a Devops Engineer at Camunda.
 
-Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs. A working knowledge of Kubernetes is assumed. 
+Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs. A working knowledge of Kubernetes is assumed.
 
 ## TL:DR;
+
 ```
 git clone https://github.com/afirth/camunda-examples.git
 cd camunda-examples/camunda-bpm-demo
 make
 ```
+
+If you get errors please install Kustomize from HEAD (see prereqs)
+
 # What is Camunda BPM
 
 [Camunda BPM](https://camunda.com) is an [open source](https://github.com/camunda/camunda-bpm-platform) platform for workflow and decision automation that brings business users and software developers together. It is ideal for coordinating and connecting humans, (micro)services, or even robots! You can read more about some use cases [here](https://camunda.com/solutions/).
@@ -35,27 +39,31 @@ Camunda BPM Engine can easily connect easily to other applications running in th
 Visibility is also greatly improved by tools like Prometheus, Grafana, Loki, Fluentd and Elasticsearch allowing a centralized view of all cluster workloads. We'll look at how to inject a Prometheus exporter into the JVM today.
 
 # Goals
+
 We'll address several areas where we can configure the Camunda BPM docker image ([github](https://github.com/camunda/docker-camunda-bpm-platform)) to play nicely with Kubernetes.
+
 1. Logs and metrics
 2. Database connections
 3. Authentication
 4. Session Management
 
-Today we will go through some techniques to address these, and show a workflow that might work for you.
+We will go through some techniques to address these, and show a workflow that might work for you.
 
 ## Prerequisites
 
 - A working [Kubernetes](https://kubernetes.io/) cluster
   - [GKE](https://cloud.google.com/free/) or minikube are a good way to get started
 - [Optional] [Kustomize > 2.0.3](https://github.com/kubernetes-sigs/kustomize) for managing yaml overlays without forking the whole manifest, allowing you to `git pull --rebase` future improvements
-  - Variable support in the ingress was added after 2.0.3 was released, so for now and make sure that [go installed binaries are available on your PATH](https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a) and `go get sigs.k8s.io/kustomize` 
+  - Variable support in the ingress was added after 2.0.3 was released, so for now and make sure that [go installed binaries are available on your PATH](https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a) and `go get sigs.k8s.io/kustomize`
  - [Optional] [Skaffold](https://skaffold.dev/) for building your own docker images and deploying easily to GKE
    - download the latest release
-	   - `curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64   
+     - `curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
 && chmod +x skaffold && sudo mv skaffold /usr/local/bin`
     - if you're using [google cloud build](https://console.cloud.google.com/cloud-build/), then
-	   - `gcloud auth application-default login` 
-	- otherwise configure `skaffold.yaml` for your providers
+     - `gcloud auth application-default login`
+  - otherwise configure `skaffold.yaml` for your providers
+
+## Basic Workflow
 
 ## Logs and Metrics
 
@@ -65,7 +73,7 @@ Prometheus defaults to a pull model scraping `<service>/metrics`, and adding a s
 
 ### Add the Prometheus jmx_exporter to the container
 ```
--- images/camunda-bpm/Dockerfile     
+-- images/camunda-bpm/Dockerfile
 FROM camunda/camunda-bpm-platform:tomcat-7.11.0
 
 ## Add prometheus exporter
@@ -86,7 +94,7 @@ platform/config
 ```
 Then we add a [ConfigMapGenerator]([https://github.com/kubernetes-sigs/kustomize/blob/master/examples/configGeneration.md](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/configGeneration.md)) to `kustomization.yaml`:
 ```
--- platform/kustomization.yaml      
+-- platform/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 [...]
@@ -121,7 +129,7 @@ spec:
 ```
 Nice. All files we add to the ConfigMapGenerator will be exposed in the new `/etc/config` directory.
  You can extend this pattern to mount any other configuration files you need. You can even mount a new startup script. You can use the [subpath](https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath) oubject to mount a single fileIf you find yourself needing to update xml files in place, please consider using [xmlstarlet](http://xmlstar.sourceforge.net/docs.php) instead of sed. It's already included in the image.
- 
+
 ### Logs
 Great news! The application logs are already available on `stdout`, for example with `kubectl logs`. Fluentd (installed by default on GKE) will forward your logs to Elasticsearch, Loki, or your enterprise log platform. If you want to jsonify your logs, you could follow the pattern above to [set up logback.](https://forum.camunda.org/t/camunda-json-logging-for-shared-engine-solved/8651)
 
@@ -167,7 +175,7 @@ kubernetes->> google cloud build: pull new image from gcr.io
 ├── site-data.yaml.example
 └── skaffold.yaml
 ```
-  
+
 
 
 
