@@ -27,7 +27,8 @@ make
 ```
 
 ### Skill level: Intermediate
-You've used Kubernetes before. If not, why not try a 
+
+You've used Kubernetes before. If not, why not try a [tutorial](https://kubernetes.io/docs/tutorials/kubernetes-basics/) and spin up your first cluster?
 
 # What is Camunda BPM
 
@@ -323,7 +324,7 @@ eyJwcm9wZXJ0aWVzIjoidGl0bGU6IFJ1bm5pbmcgQ2FtdW5kYS
 BCUE0gb24gS3ViZXJuZXRlc1xuYXV0aG9yOiBBbGFzdGFpciBG
 aXJ0aFxudGFnczogQ2FtdW5kYSBLdWJlcm5ldGVzIEs4UyBDbG
 91ZG5hdGl2ZSBQcm9tZXRoZXVzXG5kYXRlOiAnMjAxOS0wNi0w
-MydcbiIsImhpc3RvcnkiOlstNzc0MTI5MzQ5LC0xNTY3Mzk3OD
+MydcbiIsImhpc3RvcnkiOlsxNTYwODA4MzgxLC0xNTY3Mzk3OD
 c0LC0xMTgxODM3OTI2LC0xNTM3ODkxMzk4LC0xNjY3NzQwNDgy
 LDEyMTk0NDAzNzYsNjMwMTc0NTk5XX0=
 -->
