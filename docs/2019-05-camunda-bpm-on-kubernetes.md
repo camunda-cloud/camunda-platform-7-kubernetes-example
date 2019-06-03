@@ -6,7 +6,6 @@
 - TODO rewrite image name
 - TODO rewrite repo links
 - Need to scrub camunda-cloud-240911 from files
-- Include whole manifest for those who don't want kustomise
 - Note about prometheus configuration servicemonitors
 
  ## Authors
@@ -58,12 +57,14 @@ Three workflows are available
 
 See the Prerequisites for information on installing these packages
 
+> **Note:** Using Enterprise? See [here](https://docs.camunda.org/manual/7.11/installation/docker/) and update the image references accordingly.
+
 ### Basic Workflow
 
 (requires Kustomize>7a1a231 & kubectl)
 Kustomize handles overlaying the yaml files (providing similar flexibility as helm), but allowing you to extend arbitrarily rather than relying on the chart maintainer adding your particular change to the go template, or requiring you to keep a fork. Since 1.14, it's available in kubectl, but you should install it from HEAD for the time being. Kustomize generates manifests for kubectl, which we pipe through: `kustomize build | kubectl apply --dry-run -o yaml -f -` will show you whats going on (aka `make dry-run`). This doesn't build the docker image. This is the default behaviour of `make`.
 
-> **Note:** Kustomize variable handling is still relatively new. Although kustomize is now included in kubectl as `kubectl apply -k`, as of 1.14.2 you still need to `go get sigs.k8s.io/kustomize` for the `$HOSTNAME` to work. If that's not an option, you can hardcode the variable references in  `ingress-patch.yaml`
+> **Note:** Kustomize variable handling is still relatively new. Although kustomize is now included in kubectl as `kubectl apply -k`, as of 1.14.2 you still need to `go get sigs.k8s.io/kustomize` for the `$HOSTNAME` to work. If that's not an option, you can hardcode the variable references in `ingress-patch.yaml`
 
 ### Development Workflow
 
@@ -160,15 +161,32 @@ spec:
               name: config
     [...]
 ```
-Nice. All files we add to the ConfigMapGenerator will be exposed in the new `/etc/config` directory.
- You can extend this pattern to mount any other configuration files you need. You can even mount a new startup script. You can use the [subpath](https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath) oubject to mount a single fileIf you find yourself needing to update xml files in place, please consider using [xmlstarlet](http://xmlstar.sourceforge.net/docs.php) instead of sed. It's already included in the image.
+Nice. If your Prometheus isn't configured to scrape everything, you may need to tell it to scrape the pods. Prometheus-operator users can use `service-monitor.yaml` to get started. See `service-monitor.yaml`, [operator design](https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md#servicemonitor) and [spec](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitorspec) to get started.
+
+#### Going further
+All files we add to the ConfigMapGenerator will be exposed in the new `/etc/config` directory. You can extend this pattern to mount any other configuration files you need. You can even mount a new startup script. You can use the [subpath](https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath) oubject to mount a single fileIf you find yourself needing to update xml files in place, please consider using [xmlstarlet](http://xmlstar.sourceforge.net/docs.php) instead of sed. It's already included in the image.
 
 ### Logs
+
 Great news! The application logs are already available on `stdout`, for example with `kubectl logs`. Fluentd (installed by default on GKE) will forward your logs to Elasticsearch, Loki, or your enterprise log platform. If you want to jsonify your logs, you could follow the pattern above to [set up logback.](https://forum.camunda.org/t/camunda-json-logging-for-shared-engine-solved/8651)
 
+## Database
 
+By default, the image will come up with an ephemeral H2 database. This is NOT what you want for production.
+We use Google Cloud SQL, with the cloudsql-proxy in front of it for some internal uses, and this is an easy option if you don't have a preferred database setup.On AWS, RDS provides a similar service. Setup instructions for the cloudsql-proxy on kubernetes can be found [here](https://github.com/GoogleCloudPlatform/cloudsql-proxy/blob/master/Kubernetes.md)
 
-> **Note:** Secret value plugins are [available now in kustomize](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere). This allows you to populate them from sources such as existing kube-secrets or vault. Check it out!
+Regardless of the database you choose, unless it's H2 you'll need to set the appropriate environment variables in `platform/deployment.yaml`. This might look something like:
+
+```
+```
+
+You probably already have a system for manage kube secrets. If not, some options include:
+ - [SOPS](https://github.com/mozilla/sops)
+    - this can work very well in combination with Kustomize secret generators
+    - lots of other tools like dotGPG do a similar job
+ - [HashiCorp Vault](https://www.vaultproject.io/)
+ - Encrypting them with your cloud provider's KMS, and then injecting them into K8S as secrets through a CD pipeline
+ - [Kustomize Secret Value Plugins](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere)
 
 ```
 .
