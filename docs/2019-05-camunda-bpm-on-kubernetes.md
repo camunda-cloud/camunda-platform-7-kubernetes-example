@@ -234,13 +234,12 @@ If you're using [cert-manager](https://github.com/helm/charts/tree/master/stable
 If you've followed along so far, you'll need to:
 1. edit the image names in skaffold.yaml and kustomize.yaml to something you can push to
 2. [optional] set the hostname in site-data.yaml to something pointing at your ingress load balancer
+3. if you're not using google cloud build, either:
+	- edit the build steps in skaffold.yaml to build with something else
+	- build and push your image another way, then `make` to skip skaffold and use kustomize only
 3. then `make skaffold` should bring up an accessible instance at `<hostname>/camunda`
-	- if you're not using google cloud build, either:
-		- edit the build steps in skaffold.yaml to build with something else
-		- build and push your image another way, then `make` to skip skaffold and use kustomize only
 
-
-if you didn't expose the ingress via a public URL, you can port forward from localhost:
+If you didn't expose the ingress via a public URL, you can port forward from localhost:
 `kubectl port-forward -n camunda-bpm-demo svc/camunda-bpm 8080:8080`
 and browse to `localhost:8080/camunda`
 
@@ -321,7 +320,7 @@ eyJwcm9wZXJ0aWVzIjoidGl0bGU6IFJ1bm5pbmcgQ2FtdW5kYS
 BCUE0gb24gS3ViZXJuZXRlc1xuYXV0aG9yOiBBbGFzdGFpciBG
 aXJ0aFxudGFnczogQ2FtdW5kYSBLdWJlcm5ldGVzIEs4UyBDbG
 91ZG5hdGl2ZSBQcm9tZXRoZXVzXG5kYXRlOiAnMjAxOS0wNi0w
-MydcbiIsImhpc3RvcnkiOlstMTU2NzM5Nzg3NCwtMTE4MTgzNz
-kyNiwtMTUzNzg5MTM5OCwtMTY2Nzc0MDQ4MiwxMjE5NDQwMzc2
-LDYzMDE3NDU5OV19
+MydcbiIsImhpc3RvcnkiOlstMTMzNTkyNDYwLC0xNTY3Mzk3OD
+c0LC0xMTgxODM3OTI2LC0xNTM3ODkxMzk4LC0xNjY3NzQwNDgy
+LDEyMTk0NDAzNzYsNjMwMTc0NTk5XX0=
 -->
