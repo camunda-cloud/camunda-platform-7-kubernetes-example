@@ -11,16 +11,17 @@
 <li>TODO rewrite image name</li>
 <li>TODO rewrite repo links</li>
 <li>Need to scrub camunda-cloud-240911 from files</li>
-<li>Use xmlstarlet</li>
-<li>Include whole manifest for those who don’t want kustomise</li>
-<li>Note about prometheus configuration servicemonitors</li>
 </ul>
+<h1 id="running-camunda-bpm-on-kubernetes">Running Camunda BPM on Kubernetes</h1>
+<p>Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs.</p>
 <h2 id="authors">Authors</h2>
-<p><a href="https://github.com/afirth">Alastair Firth</a> is a Senior Site Reliability Engineer on the Camunda Cloud team.<br>
-<a href="https://github.com/Langleu">Lars Lange</a> is a Devops Engineer at Camunda.</p>
-<p>Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs. A working knowledge of Kubernetes is assumed.</p>
+<ul>
+<li><a href="https://github.com/afirth">Alastair Firth</a> is a Senior Site Reliability Engineer on the Camunda Cloud team.</li>
+<li><a href="https://github.com/Langleu">Lars Lange</a> is a Devops Engineer at Camunda.</li>
+</ul>
 <h2 id="tldr">TL:DR;</h2>
-<pre><code>git clone https://github.com/afirth/camunda-examples.git
+<pre><code>go get sigs.k8s.io/kustomize
+git clone https://github.com/afirth/camunda-examples.git
 cd camunda-examples/camunda-bpm-demo
 make
 </code></pre>
@@ -38,7 +39,31 @@ make
 <li>Authentication</li>
 <li>Session Management</li>
 </ol>
-<p>Today we will go through some techniques to address these, and show a workflow that might work for you.</p>
+<p>We will go through some techniques to address these, and show a workflow that might work for you.</p>
+<h2 id="workflows">Workflows</h2>
+<p>Three workflows are available</p>
+<ol>
+<li>Kustomize + Kubectl</li>
+<li>Skaffold + Kustomize + Kubectl + optionally</li>
+<li>Kubectl only</li>
+</ol>
+<p>See the Prerequisites for information on installing these packages</p>
+<blockquote>
+<p><strong>Note:</strong> Using Enterprise? See <a href="https://docs.camunda.org/manual/7.11/installation/docker/">here</a> and update the image references accordingly.</p>
+</blockquote>
+<h3 id="manifests-only-workflow">Manifests Only Workflow</h3>
+<p>(requires kubectl)<br>
+If you don’t want to use kustomize or skaffold, you can refer to the manifests in <code>generated-manifest.yaml</code>, and adapt them to the workflow of your choice.</p>
+<h3 id="basic-workflow">Basic Workflow</h3>
+<p>(requires Kustomize&gt;7a1a231 &amp; kubectl)<br>
+Kustomize handles overlaying the yaml files (providing similar flexibility as helm), but allowing you to extend arbitrarily rather than relying on the chart maintainer adding your particular change to the go template, or requiring you to keep a fork. Since 1.14, it’s available in kubectl, but you should install it from HEAD for the time being. Kustomize generates manifests for kubectl, which we pipe through: <code>kustomize build | kubectl apply --dry-run -o yaml -f -</code> will show you whats going on (aka <code>make dry-run</code>). This doesn’t build the docker image. This is the default behaviour of <code>make</code>.</p>
+<blockquote>
+<p><strong>Note:</strong> Kustomize variable handling is still relatively new. Although kustomize is now included in kubectl as <code>kubectl apply -k</code>, as of 1.14.2 you still need to <code>go get sigs.k8s.io/kustomize</code> for the <code>$HOSTNAME</code> to work. If that’s not an option, you can hardcode the variable references in <code>ingress-patch.yaml</code></p>
+</blockquote>
+<h3 id="development-workflow">Development Workflow</h3>
+<div class="mermaid"><svg xmlns="http://www.w3.org/2000/svg" id="mermaid-svg-Cs6gOJHJFf6wrR5K" height="100%" width="100%" style="max-width:850px;" viewBox="-50 -10 850 336"><g></g><g><line id="actor216" x1="75" y1="5" x2="75" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="75" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="75" dy="0">skaffold</tspan></text></g><g><line id="actor217" x1="275" y1="5" x2="275" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="200" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="275" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="275" dy="0">google cloud build</tspan></text></g><g><line id="actor218" x1="475" y1="5" x2="475" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="400" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="475" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="475" dy="0">kustomize</tspan></text></g><g><line id="actor219" x1="675" y1="5" x2="675" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="600" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="675" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="675" dy="0">kubernetes</tspan></text></g><defs><marker id="arrowhead" refX="5" refY="2" markerWidth="6" markerHeight="4" orient="auto"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><defs><marker id="crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="16" refY="4"><path fill="black" stroke="#000000" stroke-width="1px" d="M 9,2 V 6 L16,4 Z" style="stroke-dasharray: 0, 0;"></path><path fill="none" stroke="#000000" stroke-width="1px" d="M 0,1 L 6,7 M 6,1 L 0,7" style="stroke-dasharray: 0, 0;"></path></marker></defs><g><text x="175" y="93" class="messageText" style="text-anchor: middle;">upload Dockerfile &amp; context</text><line x1="75" y1="100" x2="275" y2="100" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="175" y="128" class="messageText" style="text-anchor: middle;">return built image tag</text><line x1="275" y1="135" x2="75" y2="135" class="messageLine1" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line></g><g><text x="275" y="163" class="messageText" style="text-anchor: middle;">rewrite manifests with new tag</text><line x1="75" y1="170" x2="475" y2="170" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="575" y="198" class="messageText" style="text-anchor: middle;">upload manifests</text><line x1="475" y1="205" x2="675" y2="205" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="475" y="233" class="messageText" style="text-anchor: middle;">pull new image from gcr.io</text><line x1="675" y1="240" x2="275" y2="240" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><rect x="0" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="75" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="75" dy="0">skaffold</tspan></text></g><g><rect x="200" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="275" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="275" dy="0">google cloud build</tspan></text></g><g><rect x="400" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="475" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="475" dy="0">kustomize</tspan></text></g><g><rect x="600" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="675" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="675" dy="0">kubernetes</tspan></text></g></svg></div>
+<p>(requires Kustomize&gt;7a1a231, kubectl, and Skaffold)<br>
+If your workflow is currently painful, you might want to try skaffold. It has good support for a variety of templating tools (like Kustomize and Helm), CI and build tools, and infrastructure providers. The <code>skaffold.yaml</code> included is configured for google cloud build and GKE, which provides a very easy way to get going on production grade infrastructure. You’ll need to change the image name to your GCP project-id if you want to use it. Then <code>skaffold run</code> aka <code>make skaffold</code> will upload the Dockerfile context to cloudbuild, build the image and save it to GCR, then apply the manifests to your cluster. You still need kustomize from HEAD. This is the behaviour of <code>make skaffold</code>, but Skaffold has many other capabilities.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
 <li>A working <a href="https://kubernetes.io/">Kubernetes</a> cluster
@@ -46,9 +71,9 @@ make
 <li><a href="https://cloud.google.com/free/">GKE</a> or minikube are a good way to get started</li>
 </ul>
 </li>
-<li>[Optional] <a href="https://github.com/kubernetes-sigs/kustomize">Kustomize &gt; 2.0.3</a> for managing yaml overlays without forking the whole manifest, allowing you to <code>git pull --rebase</code> future improvements
+<li>[Optional] <a href="https://github.com/kubernetes-sigs/kustomize">Kustomize &gt; 7a1a231</a> for managing yaml overlays without forking the whole manifest, allowing you to <code>git pull --rebase</code> future improvements
 <ul>
-<li>Variable support in the ingress was added after 2.0.3 was released, so for now and make sure that <a href="https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a">go installed binaries are available on your PATH</a> and <code>go get sigs.k8s.io/kustomize</code></li>
+<li>Variable support in the ingress was added after 2.0.3 was released, so for now make sure that <a href="https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a">go installed binaries are available on your PATH</a> and <code>go get sigs.k8s.io/kustomize</code></li>
 </ul>
 </li>
 <li>[Optional] <a href="https://skaffold.dev/">Skaffold</a> for building your own docker images and deploying easily to GKE
@@ -71,7 +96,7 @@ make
 <p>Prometheus has become the standard for capturing metrics in Kubernetes. It fills the same niche as AWS Cloudwatch Metrics, Cloudwatch Alerts, Stackdriver Metrics, StatsD, Datadog, Nagios, vSphere Metrics and others. It’s open source and has a powerful query language. The front end of choice is Grafana, and it comes with lots of dashboards available out of the box. They are bundled together and relatively easy to install with the <a href="https://github.com/helm/charts/tree/master/stable/prometheus-operator">prometheus-operator helm chart</a>.</p>
 <p>Prometheus defaults to a pull model scraping <code>&lt;service&gt;/metrics</code>, and adding a sidecar container to expose this is common. Unfortunately the JMX metrics are best captured from inside the JVM, so a sidecar isn’t as effective. Let’s plug the <a href="https://github.com/prometheus/jmx_exporter">open source jmx_exporter</a> from Prometheus into the JVM by adding it to the container image, which will expose a <code>/metrics</code> path on another port.</p>
 <h3 id="add-the-prometheus-jmx_exporter-to-the-container">Add the Prometheus jmx_exporter to the container</h3>
-<pre><code>-- images/camunda-bpm/Dockerfile     
+<pre><code>-- images/camunda-bpm/Dockerfile
 FROM camunda/camunda-bpm-platform:tomcat-7.11.0
 
 ## Add prometheus exporter
@@ -87,7 +112,7 @@ ENV CATALINA_OPTS -javaagent:lib/jmx_prometheus_javaagent-0.11.0.jar=9404:/etc/c
 └── prometheus-jmx.yaml
 </code></pre>
 <p>Then we add a <a href="%5Bhttps://github.com/kubernetes-sigs/kustomize/blob/master/examples/configGeneration.md%5D(https://github.com/kubernetes-sigs/kustomize/blob/master/examples/configGeneration.md)">ConfigMapGenerator</a> to <code>kustomization.yaml</code>:</p>
-<pre><code>-- platform/kustomization.yaml      
+<pre><code>-- platform/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 [...]
@@ -118,37 +143,126 @@ spec:
               name: config
     [...]
 </code></pre>
-<p>Nice. All files we add to the ConfigMapGenerator will be exposed in the new <code>/etc/config</code> directory.<br>
-You can extend this pattern to mount any other configuration files you need. You can even mount a new startup script. You can use the <a href="https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath">subpath</a> oubject to mount a single fileIf you find yourself needing to update xml files in place, please consider using <a href="http://xmlstar.sourceforge.net/docs.php">xmlstarlet</a> instead of sed. It’s already included in the image.</p>
+<p>Nice. If your Prometheus isn’t configured to scrape everything, you may need to tell it to scrape the pods. Prometheus-operator users can use <code>service-monitor.yaml</code> to get started. See <code>service-monitor.yaml</code>, <a href="https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md#servicemonitor">operator design</a> and <a href="https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitorspec">spec</a> to get started.</p>
+<h4 id="extending-this-pattern-to-other-use-cases">Extending this pattern to other use cases</h4>
+<p>All files we add to the ConfigMapGenerator will be exposed in the new <code>/etc/config</code> directory. You can extend this pattern to mount any other configuration files you need. You can even mount a new startup script. You can use the <a href="https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath">subpath</a> object to mount a single file. If you find yourself needing to update xml files in place, please consider using <a href="http://xmlstar.sourceforge.net/docs.php">xmlstarlet</a> instead of sed. It’s already included in the image.</p>
 <h3 id="logs">Logs</h3>
 <p>Great news! The application logs are already available on <code>stdout</code>, for example with <code>kubectl logs</code>. Fluentd (installed by default on GKE) will forward your logs to Elasticsearch, Loki, or your enterprise log platform. If you want to jsonify your logs, you could follow the pattern above to <a href="https://forum.camunda.org/t/camunda-json-logging-for-shared-engine-solved/8651">set up logback.</a></p>
-<h1 id="how-to-run-on-kubernetes---manifests-plain">How to run on Kubernetes - manifests (plain)</h1>
+<h2 id="database">Database</h2>
+<p>By default, the image will come up with an ephemeral H2 database. This is NOT what you want for production.<br>
+We use Google Cloud SQL, with the cloudsql-proxy in front of it for some internal uses, and this is an easy option if you don’t have a preferred database setup.On AWS, RDS provides a similar service. Setup instructions for the cloudsql-proxy on kubernetes can be found <a href="https://github.com/GoogleCloudPlatform/cloudsql-proxy/blob/master/Kubernetes.md">here</a></p>
+<p>Regardless of the database you choose, unless it’s H2 you’ll need to set the appropriate environment variables in <code>platform/deployment.yaml</code>. This might look something like:</p>
+<pre><code>-- platform/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+[...]
+spec:
+  template:
+    spec:
+    [...]
+      containers:
+        - name: camunda-bpm
+          env:
+            - name: DB_DRIVER
+              value: org.postgresql.Driver
+            - name: DB_URL
+              value: jdbc:postgresql://postgres-proxy.db:5432/process-engine
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: cambpm-db-credentials
+                  key: db_username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cambpm-db-credentials
+                  key: db_password
+[...]
+</code></pre>
 <blockquote>
-<p><strong>Note:</strong> Kustomize variable handling is still relatively new. Although kustomize is now included in kubectl as <code>kubectl apply -k</code>, as of 1.14.2 you still need to <code>go get sigs.k8s.io/kustomize</code> for the <code>$HOSTNAME</code> to work. If that’s not an option, you can hardcode the variable references in  <code>ingress-patch.yaml</code></p>
+<p><strong>Note:</strong> You could also use Kustomize to patch the deployment for different environments using an overlay: (example)[<a href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples/springboot">https://github.com/kubernetes-sigs/kustomize/tree/master/examples/springboot</a>].</p>
 </blockquote>
 <blockquote>
-<p><strong>Note:</strong> Secret value plugins are <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere">available now in kustomize</a>. This allows you to populate them from sources such as existing kube-secrets or vault. Check it out!</p>
+<p><strong>Note:</strong> the use of <code>valueFrom: secretKeyRef</code>. Please use this <a href="https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables">wonderful feature of Kubernetes</a>, even during development.</p>
 </blockquote>
-<div class="mermaid"><svg xmlns="http://www.w3.org/2000/svg" id="mermaid-svg-iTVCrRBrC0Bob0RQ" height="100%" width="100%" style="max-width:850px;" viewBox="-50 -10 850 336"><g></g><g><line id="actor200" x1="75" y1="5" x2="75" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="75" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="75" dy="0">skaffold</tspan></text></g><g><line id="actor201" x1="275" y1="5" x2="275" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="200" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="275" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="275" dy="0">google cloud build</tspan></text></g><g><line id="actor202" x1="475" y1="5" x2="475" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="400" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="475" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="475" dy="0">kustomize</tspan></text></g><g><line id="actor203" x1="675" y1="5" x2="675" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="600" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="675" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="675" dy="0">kubernetes</tspan></text></g><defs><marker id="arrowhead" refX="5" refY="2" markerWidth="6" markerHeight="4" orient="auto"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><defs><marker id="crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="16" refY="4"><path fill="black" stroke="#000000" stroke-width="1px" d="M 9,2 V 6 L16,4 Z" style="stroke-dasharray: 0, 0;"></path><path fill="none" stroke="#000000" stroke-width="1px" d="M 0,1 L 6,7 M 6,1 L 0,7" style="stroke-dasharray: 0, 0;"></path></marker></defs><g><text x="175" y="93" class="messageText" style="text-anchor: middle;">upload Dockerfile &amp; context</text><line x1="75" y1="100" x2="275" y2="100" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="175" y="128" class="messageText" style="text-anchor: middle;">return built image tag</text><line x1="275" y1="135" x2="75" y2="135" class="messageLine1" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line></g><g><text x="275" y="163" class="messageText" style="text-anchor: middle;">rewrite manifests with new tag</text><line x1="75" y1="170" x2="475" y2="170" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="575" y="198" class="messageText" style="text-anchor: middle;">upload manifests</text><line x1="475" y1="205" x2="675" y2="205" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="475" y="233" class="messageText" style="text-anchor: middle;">pull new image from gcr.io</text><line x1="675" y1="240" x2="275" y2="240" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><rect x="0" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="75" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="75" dy="0">skaffold</tspan></text></g><g><rect x="200" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="275" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="275" dy="0">google cloud build</tspan></text></g><g><rect x="400" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="475" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="475" dy="0">kustomize</tspan></text></g><g><rect x="600" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="675" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="675" dy="0">kubernetes</tspan></text></g></svg></div>
-<div class="mermaid"><svg xmlns="http://www.w3.org/2000/svg" id="mermaid-svg-iuIRQHdfXp2o8XcL" height="100%" width="100%" style="max-width:850px;" viewBox="-50 -10 850 336"><g></g><g><line id="actor204" x1="75" y1="5" x2="75" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="75" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="75" dy="0">skaffold</tspan></text></g><g><line id="actor205" x1="275" y1="5" x2="275" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="200" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="275" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="275" dy="0">google cloud build</tspan></text></g><g><line id="actor206" x1="475" y1="5" x2="475" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="400" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="475" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="475" dy="0">kustomize</tspan></text></g><g><line id="actor207" x1="675" y1="5" x2="675" y2="325" class="actor-line" stroke-width="0.5px" stroke="#999"></line><rect x="600" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="675" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="675" dy="0">kubernetes</tspan></text></g><defs><marker id="arrowhead" refX="5" refY="2" markerWidth="6" markerHeight="4" orient="auto"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><defs><marker id="crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="16" refY="4"><path fill="black" stroke="#000000" stroke-width="1px" d="M 9,2 V 6 L16,4 Z" style="stroke-dasharray: 0, 0;"></path><path fill="none" stroke="#000000" stroke-width="1px" d="M 0,1 L 6,7 M 6,1 L 0,7" style="stroke-dasharray: 0, 0;"></path></marker></defs><g><text x="175" y="93" class="messageText" style="text-anchor: middle;">upload Dockerfile &amp; context</text><line x1="75" y1="100" x2="275" y2="100" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="175" y="128" class="messageText" style="text-anchor: middle;">return built image tag</text><line x1="275" y1="135" x2="75" y2="135" class="messageLine1" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line></g><g><text x="275" y="163" class="messageText" style="text-anchor: middle;">rewrite manifests with new tag</text><line x1="75" y1="170" x2="475" y2="170" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="575" y="198" class="messageText" style="text-anchor: middle;">upload manifests</text><line x1="475" y1="205" x2="675" y2="205" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><text x="475" y="233" class="messageText" style="text-anchor: middle;">pull new image from gcr.io</text><line x1="675" y1="240" x2="275" y2="240" class="messageLine0" stroke-width="2" stroke="black" marker-end="url(#arrowhead)" style="fill: none;"></line></g><g><rect x="0" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="75" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="75" dy="0">skaffold</tspan></text></g><g><rect x="200" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="275" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="275" dy="0">google cloud build</tspan></text></g><g><rect x="400" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="475" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="475" dy="0">kustomize</tspan></text></g><g><rect x="600" y="260" fill="#eaeaea" stroke="#666" width="150" height="65" rx="3" ry="3" class="actor"></rect><text x="675" y="292.5" dominant-baseline="central" alignment-baseline="central" class="actor" style="text-anchor: middle;"><tspan x="675" dy="0">kubernetes</tspan></text></g></svg></div>
-<pre><code>.
-├── Makefile
+<p>You probably already have a system for manage kube secrets. If not, some options include:</p>
+<ul>
+<li>Encrypting them with your cloud provider’s KMS, and then injecting them into K8S as secrets through a CD pipeline</li>
+<li><a href="https://github.com/mozilla/sops">MozillaSOPS</a>
+<ul>
+<li>this can work very well in combination with Kustomize secret generators</li>
+<li>lots of other tools like dotGPG do a similar job</li>
+</ul>
+</li>
+<li><a href="https://www.vaultproject.io/">HashiCorp Vault</a></li>
+<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere">Kustomize Secret Value Plugins</a></li>
+</ul>
+<h2 id="ingress">Ingress</h2>
+<p>Unless you just want to use localhost port forwarding, you’ll need an ingress controller configured. If you’re not running <a href="https://kubernetes.github.io/ingress-nginx/">ingress-nginx</a> (confusingly <a href="https://github.com/helm/charts/tree/master/stable/nginx-ingress">nginx-ingress on helm</a>), you probably already know that you need to go set some different annotations in <code>ingress-patch.yaml</code> or <code>platform/ingress.yaml</code>. If you are running ingress-nginx, and have it watching the <code>nginx</code> ingress class, you’re all set.</p>
+<h3 id="tls">TLS</h3>
+<p>If you’re using <a href="https://github.com/helm/charts/tree/master/stable/cert-manager#installing-the-chart">cert-manager</a> or kube-lego, and letsencrypt, your certificates for the new ingress should be automatically provisioned for you. Otherwise, check out <code>ingress-patch.yaml</code> and adjust to your needs.</p>
+<h2 id="run-it">Run it!</h2>
+<p>If you’ve followed along so far, you’ll need to:</p>
+<ol>
+<li>edit the image names in skaffold.yaml and kustomize.yaml to something you can push to</li>
+<li>[optional] set the hostname in site-data.yaml to something pointing at your ingress load balancer</li>
+<li>then <code>make skaffold</code> should bring up an accessible instance at <code>&lt;hostname&gt;/camunda</code></li>
+</ol>
+<p>if you didn’t expose the ingress via a public URL, you can port forward from localhost</p>
+<p><code>kubectl port-forward -n camunda-bpm-demo svc/camunda-bpm 8080:8080</code></p>
+<p>and browse to <code>localhost:8080/camunda</code></p>
+<p>Give tomcat a few moments to come up, and cert-manager awhile to verify your domain name. You can follow the logs with your log aggregator, a tool like kubetail,<br>
+or with just kubectl:<br>
+<code>kubectl logs -n camunda-bpm-demo $(kubectl get pods -o=name -n camunda-bpm-demo) -f</code></p>
+<h2 id="next-steps">Next steps</h2>
+<h3 id="authorization">Authorization</h3>
+<p>This is more in the “configuring Camunda BPM” bucket than specific to Kubernetes, but it’s important to note that by default the REST API has authentication disabled. You can <a href="https://docs.camunda.org/manual/latest/reference/rest/overview/authentication/">switch on basic auth</a>, or use another method like <a href="https://github.com/DigitalState/camunda-rest-jwt-authentication">JWT</a>. You can use configmaps and volumes to load xml, or use xmlstarlet (see above) to edit existing files in the image, and either <code>wget</code> jars or sideload them with an init container and shared volume.</p>
+<h3 id="session-management">Session management</h3>
+<p>Like many other applications, Camunda BPM handles sessions at the JVM, so if you want to run multiple replicas you can either enable sticky sessions <a href="https://kubernetes.github.io/ingress-nginx/examples/affinity/cookie/">example for ingress-nginx</a> which will survive until the replica goes away or the cookie’s <code>Max-Age</code>, or for a more robust solution you can deploy a session manager into tomcat. Lars is working on a separate post about this topic, but something like:</p>
+<pre><code>wget http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager/2.3.2/memcached-session-manager-2.3.2.jar -P lib/ &amp;&amp; \
+wget http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager-tc9/2.3.2/memcached-session-manager-tc9-2.3.2.jar -P lib/ &amp;&amp; \
+
+sed -i '/^&lt;\/Context&gt;/i \
+&lt;Manager className="de.javakaffee.web.msm.MemcachedBackupSessionManager" \
+memcachedNodes="redis://redis-proxy.db:22121" \
+sticky="false" \
+sessionBackupAsync="false" \
+storageKeyPrefix="context" \
+lockingMode="auto" \
+/&gt;' conf/context.xml
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> xmlstarlet can replace sed here</p>
+</blockquote>
+<p>We’ve used <a href="https://github.com/tuananh/kubernetes-twemproxy">twemproxy</a> in front of Google Cloud Memorystore, with <a href="https://github.com/magro/memcached-session-manager/wiki/SetupAndConfiguration">memcached-session-manager (supports redis)</a></p>
+<h3 id="scaling">Scaling</h3>
+<p>If you have sessions sorted out, the first (and often last) limit for scaling Camunda BPM is generally database connections. You can tune these to some extent <a href="https://github.com/camunda/docker-camunda-bpm-platform/blob/master/Dockerfile#L34">out of the box</a>. We turn down the intialSize too. Add a HorizontalPodAutoscaler (HPA)](<a href="https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/">https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/</a>]</p>
+<h3 id="requests-and-limits">Requests and Limits</h3>
+<p>In <code>platform/deployment.yaml</code> you’ll see we have hardcoded the resource field. This works well with HPA, but you may need to tune them. A kustomize patch will work well for this. See <code>ingress-patch.yaml</code> and <code>./kustomization.yaml</code> for an example.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>We’ve set up Camunda BPM on Kubernetes with Prometheus metrics, logs, an ephemeral H2 database, TLS, and Ingress. We’ve added jars and configuration files using ConfigMaps and a Dockerfile. We’ve talked about sharing data with volumes and directly into environment variables from secrets. We’ve also provided an overview of configuring Camunda for multiple replicas and authenticaticated APIs.</p>
+<h1 id="references">References</h1>
+<h2 id="file-map">File Map</h2>
+<pre><code>github.com/afirth/camunda-examples/camunda-bpm-kubernetes
+│
+├── generated-manifest.yaml       &lt;- manifest for use without kustomize
 ├── images
 │   └── camunda-bpm
-│       └── Dockerfile
-├── ingress-patch.yaml
-├── kustomization.yaml
+│       └── Dockerfile            &lt;- overlay docker image
+├── ingress-patch.yaml            &lt;- site-specific ingress configuration
+├── kustomization.yaml            &lt;- main Kustomization
+├── Makefile                      &lt;- make targets
 ├── namespace.yaml
 ├── platform
 │   ├── config
-│   │   └── prometheus-jmx.yaml
-│   ├── deployment.yaml
-│   ├── ingress.yaml
-│   ├── kustomization.yaml
+│   │   └── prometheus-jmx.yaml   &lt;- prometheus exporter config file
+│   ├── deployment.yaml           &lt;- main deployment
+│   ├── ingress.yaml 
+│   ├── kustomization.yaml        &lt;- "base" kustomization
+│   ├── service-monitor.yaml      &lt;- example prometheus-operator configuration
 │   └── service.yaml
-├── site-data.yaml
-├── site-data.yaml.example
-└── skaffold.yaml
+├── site-data.yaml                &lt;- $(HOSTNAME) variable generator
+└── skaffold.yaml                 &lt;- skaffold directives
 </code></pre>
 <h2 id="questions">Questions?</h2>
 <p>Please ask questions specific to Camunda on our <a href="http://forum.camunda.org">forum</a>!  Questions about Kubernetes may be better asked on the <a href="https://slack.k8s.io/">k8s slack</a>.</p>
