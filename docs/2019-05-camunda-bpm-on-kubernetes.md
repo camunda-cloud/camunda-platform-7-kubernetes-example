@@ -26,6 +26,9 @@ cd camunda-examples/camunda-bpm-demo
 make
 ```
 
+### Skill level: Intermediate
+You've used Kubernetes before. If not, why not try a 
+
 # What is Camunda BPM
 
 [Camunda BPM](https://camunda.com) is an [open source](https://github.com/camunda/camunda-bpm-platform) platform for workflow and decision automation that brings business users and software developers together. It is ideal for coordinating and connecting humans, (micro)services, or even robots! You can read more about some use cases [here](https://camunda.com/solutions/).
@@ -320,7 +323,7 @@ eyJwcm9wZXJ0aWVzIjoidGl0bGU6IFJ1bm5pbmcgQ2FtdW5kYS
 BCUE0gb24gS3ViZXJuZXRlc1xuYXV0aG9yOiBBbGFzdGFpciBG
 aXJ0aFxudGFnczogQ2FtdW5kYSBLdWJlcm5ldGVzIEs4UyBDbG
 91ZG5hdGl2ZSBQcm9tZXRoZXVzXG5kYXRlOiAnMjAxOS0wNi0w
-MydcbiIsImhpc3RvcnkiOlstMTMzNTkyNDYwLC0xNTY3Mzk3OD
+MydcbiIsImhpc3RvcnkiOlstNzc0MTI5MzQ5LC0xNTY3Mzk3OD
 c0LC0xMTgxODM3OTI2LC0xNTM3ODkxMzk4LC0xNjY3NzQwNDgy
 LDEyMTk0NDAzNzYsNjMwMTc0NTk5XX0=
 -->
