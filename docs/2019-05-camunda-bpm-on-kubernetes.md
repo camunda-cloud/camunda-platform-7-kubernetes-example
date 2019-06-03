@@ -1,3 +1,7 @@
+# Running Camunda BPM on Kubernetes
+
+Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs.
+
 # TODOS
 
 - Update documentation to point to github
@@ -6,10 +10,6 @@
 - TODO rewrite image name
 - TODO rewrite repo links
 - Need to scrub camunda-cloud-240911 from files
-
-# Running Camunda BPM on Kubernetes
-
-Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs.
 
 ## Authors
 
@@ -316,6 +316,7 @@ github.com/afirth/camunda-examples/camunda-bpm-kubernetes
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExODE4Mzc5MjYsLTE1Mzc4OTEzOTgsLT
-E2Njc3NDA0ODIsMTIxOTQ0MDM3Niw2MzAxNzQ1OTldfQ==
+eyJoaXN0b3J5IjpbNTEyMTY3ODM0LC0xMTgxODM3OTI2LC0xNT
+M3ODkxMzk4LC0xNjY3NzQwNDgyLDEyMTk0NDAzNzYsNjMwMTc0
+NTk5XX0=
 -->
