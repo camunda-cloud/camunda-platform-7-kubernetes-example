@@ -317,7 +317,11 @@ github.com/afirth/camunda-examples/camunda-bpm-kubernetes
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTQ4MDY5MjIxNiwtMTE4MTgzNzkyNiwtMT
-UzNzg5MTM5OCwtMTY2Nzc0MDQ4MiwxMjE5NDQwMzc2LDYzMDE3
-NDU5OV19
+eyJwcm9wZXJ0aWVzIjoidGl0bGU6IFJ1bm5pbmcgQ2FtdW5kYS
+BCUE0gb24gS3ViZXJuZXRlc1xuYXV0aG9yOiBBbGFzdGFpciBG
+aXJ0aFxudGFnczogQ2FtdW5kYSBLdWJlcm5ldGVzIEs4UyBDbG
+91ZG5hdGl2ZSBQcm9tZXRoZXVzXG5kYXRlOiAnMjAxOS0wNi0w
+MydcbiIsImhpc3RvcnkiOlstMTU2NzM5Nzg3NCwtMTE4MTgzNz
+kyNiwtMTUzNzg5MTM5OCwtMTY2Nzc0MDQ4MiwxMjE5NDQwMzc2
+LDYzMDE3NDU5OV19
 -->
