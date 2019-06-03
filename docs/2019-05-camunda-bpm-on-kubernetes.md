@@ -6,7 +6,6 @@
 - TODO rewrite image name
 - TODO rewrite repo links
 - Need to scrub camunda-cloud-240911 from files
-- Note about prometheus configuration servicemonitors
 
 # Running Camunda BPM on Kubernetes
 
@@ -316,6 +315,6 @@ github.com/afirth/camunda-examples/camunda-bpm-kubernetes
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1Mzc4OTEzOTgsLTE2Njc3NDA0ODIsMT
-IxOTQ0MDM3Niw2MzAxNzQ1OTldfQ==
+eyJoaXN0b3J5IjpbMTM5MjkxMTcxOCwtMTUzNzg5MTM5OCwtMT
+Y2Nzc0MDQ4MiwxMjE5NDQwMzc2LDYzMDE3NDU5OV19
 -->
