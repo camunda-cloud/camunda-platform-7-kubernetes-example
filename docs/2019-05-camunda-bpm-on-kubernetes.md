@@ -165,9 +165,9 @@ spec:
 ```
 Nice. If your Prometheus isn't configured to scrape everything, you may need to tell it to scrape the pods. Prometheus-operator users can use `service-monitor.yaml` to get started. See `service-monitor.yaml`, [operator design](https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md#servicemonitor) and [spec](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitorspec) to get started.
 
-#### Going further
+#### Extending this pattern to other use cases
 
-All files we add to the ConfigMapGenerator will be exposed in the new `/etc/config` directory. You can extend this pattern to mount any other configuration files you need. You can even mount a new startup script. You can use the [subpath](https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath) oubject to mount a single fileIf you find yourself needing to update xml files in place, please consider using [xmlstarlet](http://xmlstar.sourceforge.net/docs.php) instead of sed. It's already included in the image.
+All files we add to the ConfigMapGenerator will be exposed in the new `/etc/config` directory. You can extend this pattern to mount any other configuration files you need. You can even mount a new startup script. You can use the [subpath](https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath) object to mount a single file. If you find yourself needing to update xml files in place, please consider using [xmlstarlet](http://xmlstar.sourceforge.net/docs.php) instead of sed. It's already included in the image.
 
 ### Logs
 
@@ -221,7 +221,74 @@ You probably already have a system for manage kube secrets. If not, some options
 - [HashiCorp Vault](https://www.vaultproject.io/)
 - [Kustomize Secret Value Plugins](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere)
 
-## File key
+## Ingress
+
+Unless you just want to use localhost port forwarding, you'll need an ingress controller configured. If you're not running [ingress-nginx](https://kubernetes.github.io/ingress-nginx/) (confusingly [nginx-ingress on helm](https://github.com/helm/charts/tree/master/stable/nginx-ingress)), you probably already know that you need to go set some different annotations in `ingress-patch.yaml` or `platform/ingress.yaml`. If you are running ingress-nginx, and have it watching the `nginx` ingress class, you're all set.
+
+### TLS
+
+If you're using [cert-manager](https://github.com/helm/charts/tree/master/stable/cert-manager#installing-the-chart) or kube-lego, and letsencrypt, your certificates for the new ingress should be automatically provisioned for you. Otherwise, check out `ingress-patch.yaml` and adjust to your needs.
+
+## Run it!
+
+If you've followed along so far, you'll need to:
+1. edit the image names in skaffold.yaml and kustomize.yaml to something you can push to
+1. [optional] set the hostname in site-data.yaml to something pointing at your ingress load balancer
+1. then `make skaffold` should bring up an accessible instance at `<hostname>/camunda`
+
+if you didn't expose the ingress via a public URL, you can port forward from localhost
+
+`kubectl port-forward -n camunda-bpm-demo svc/camunda-bpm 8080:8080`
+
+and browse to `localhost:8080/camunda`
+
+Give tomcat a few moments to come up, and cert-manager awhile to verify your domain name. You can follow the logs with your log aggregator, a tool like kubetail,
+or with just kubectl:
+`kubectl logs -n camunda-bpm-demo $(kubectl get pods -o=name -n camunda-bpm-demo) -f`
+
+## Next steps
+
+### Authorization
+
+This is more in the "configuring Camunda BPM" bucket than specific to Kubernetes, but it's important to note that by default the REST API has authentication disabled. You can [switch on basic auth](https://docs.camunda.org/manual/latest/reference/rest/overview/authentication/), or use another method like [JWT](https://github.com/DigitalState/camunda-rest-jwt-authentication). You can use configmaps and volumes to load xml, or use xmlstarlet (see above) to edit existing files in the image, and either `wget` jars or sideload them with an init container and shared volume.
+
+### Session management
+
+Like many other applications, Camunda BPM handles sessions at the JVM, so if you want to run multiple replicas you can either enable sticky sessions [example for ingress-nginx](https://kubernetes.github.io/ingress-nginx/examples/affinity/cookie/) which will survive until the replica goes away or the cookie's `Max-Age`, or for a more robust solution you can deploy a session manager into tomcat. Lars is working on a separate post about this topic, but something like:
+
+```
+wget http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager/2.3.2/memcached-session-manager-2.3.2.jar -P lib/ && \
+wget http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager-tc9/2.3.2/memcached-session-manager-tc9-2.3.2.jar -P lib/ && \
+
+sed -i '/^<\/Context>/i \
+<Manager className="de.javakaffee.web.msm.MemcachedBackupSessionManager" \
+memcachedNodes="redis://redis-proxy.db:22121" \
+sticky="false" \
+sessionBackupAsync="false" \
+storageKeyPrefix="context" \
+lockingMode="auto" \
+/>' conf/context.xml
+```
+
+> **Note:** xmlstarlet can replace sed here
+
+We've used [twemproxy](https://github.com/tuananh/kubernetes-twemproxy) in front of Google Cloud Memorystore, with [memcached-session-manager (supports redis)](https://github.com/magro/memcached-session-manager/wiki/SetupAndConfiguration)
+
+### Scaling
+
+If you have sessions sorted out, the first (and often last) limit for scaling Camunda BPM is generally database connections. You can tune these to some extent [out of the box](https://github.com/camunda/docker-camunda-bpm-platform/blob/master/Dockerfile#L34). We turn down the intialSize too. Add a HorizontalPodAutoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/]
+
+### Requests and Limits
+
+In `platform/deployment.yaml` you'll see we have hardcoded the resource field. This works well with HPA, but you may need to tune them. A kustomize patch will work well for this. See `ingress-patch.yaml` and `./kustomization.yaml` for an example.
+
+# Conclusion
+
+We've set up Camunda BPM on Kubernetes with Prometheus metrics, logs, an ephemeral H2 database, TLS, and Ingress. We've added jars and configuration files using ConfigMaps and a Dockerfile. We've talked about sharing data with volumes and directly into environment variables from secrets. We've also provided an overview of configuring Camunda for multiple replicas and authenticaticated APIs.
+
+# References
+
+## File Map
 
 ```
 github.com/afirth/camunda-examples/camunda-bpm-kubernetes
