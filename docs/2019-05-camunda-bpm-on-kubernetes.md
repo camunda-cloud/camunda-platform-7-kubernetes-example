@@ -276,7 +276,7 @@ We've used [twemproxy](https://github.com/tuananh/kubernetes-twemproxy) in front
 
 ### Scaling
 
-If you have sessions sorted out, the first (and often last) limit for scaling Camunda BPM may be database connections. You can tune these to some extent [out of the box](https://github.com/camunda/docker-camunda-bpm-platform/blob/master/Dockerfile#L34). We turn down the intialSize in settingstoo. Add a HorizontalPodAutoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/]
+If you have sessions sorted out, the first (and often last) limit for scaling Camunda BPM may be database connections. You can tune these to some extent [out of the box](https://github.com/camunda/docker-camunda-bpm-platform/blob/master/Dockerfile#L34). We turn down the intialSize in settings.xml too. Add a [HorizontalPodAutoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) and you can get to double digit replicas pretty easily.
 
 ### Requests and Limits
 
@@ -316,6 +316,6 @@ github.com/afirth/camunda-examples/camunda-bpm-kubernetes
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTQ3NDYwNjg1MywtMTUzNzg5MTM5OCwtMT
-Y2Nzc0MDQ4MiwxMjE5NDQwMzc2LDYzMDE3NDU5OV19
+eyJoaXN0b3J5IjpbLTExODE4Mzc5MjYsLTE1Mzc4OTEzOTgsLT
+E2Njc3NDA0ODIsMTIxOTQ0MDM3Niw2MzAxNzQ1OTldfQ==
 -->
