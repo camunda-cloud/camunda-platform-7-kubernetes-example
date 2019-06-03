@@ -254,7 +254,7 @@ This is more in the "configuring Camunda BPM" bucket than specific to Kubernetes
 
 ### Session management
 
-Like many other applications, Camunda BPM handles sessions at the JVM, so if you want to run multiple replicas you can either enable sticky sessions [example for ingress-nginx](https://kubernetes.github.io/ingress-nginx/examples/affinity/cookie/) which will survive until the replica goes away or the cookie's `Max-Age`, or for a more robust solution you can deploy a session manager into tomcat. Lars is working on a separate post about this topic, but something like:
+Like many other applications, Camunda BPM handles sessions at the JVM, so if you want to run multiple replicas you can either enable sticky sessions, [(example for ingress-nginx)](https://kubernetes.github.io/ingress-nginx/examples/affinity/cookie/), which will survive until the replica goes away or the cookie's `Max-Age`, or for a more robust solution you can deploy a session manager into tomcat. Lars is working on a separate post about this topic, but something like:
 
 ```
 wget http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager/2.3.2/memcached-session-manager-2.3.2.jar -P lib/ && \
@@ -272,11 +272,11 @@ lockingMode="auto" \
 
 > **Note:** xmlstarlet can replace sed here
 
-We've used [twemproxy](https://github.com/tuananh/kubernetes-twemproxy) in front of Google Cloud Memorystore, with [memcached-session-manager (supports redis)](https://github.com/magro/memcached-session-manager/wiki/SetupAndConfiguration)
+We've used [twemproxy](https://github.com/tuananh/kubernetes-twemproxy) in front of Google Cloud Memorystore, with [memcached-session-manager (supports redis)](https://github.com/magro/memcached-session-manager/wiki/SetupAndConfiguration) to get this up and running.
 
 ### Scaling
 
-If you have sessions sorted out, the first (and often last) limit for scaling Camunda BPM is generally database connections. You can tune these to some extent [out of the box](https://github.com/camunda/docker-camunda-bpm-platform/blob/master/Dockerfile#L34). We turn down the intialSize too. Add a HorizontalPodAutoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/]
+If you have sessions sorted out, the first (and often last) limit for scaling Camunda BPM may be database connections. You can tune these to some extent [out of the box](https://github.com/camunda/docker-camunda-bpm-platform/blob/master/Dockerfile#L34). We turn down the intialSize in settingstoo. Add a HorizontalPodAutoscaler (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/]
 
 ### Requests and Limits
 
@@ -316,6 +316,6 @@ github.com/afirth/camunda-examples/camunda-bpm-kubernetes
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNDQ5MTU2Mzk1LC0xNTM3ODkxMzk4LC0xNj
-Y3NzQwNDgyLDEyMTk0NDAzNzYsNjMwMTc0NTk5XX0=
+eyJoaXN0b3J5IjpbLTQ3NDYwNjg1MywtMTUzNzg5MTM5OCwtMT
+Y2Nzc0MDQ4MiwxMjE5NDQwMzc2LDYzMDE3NDU5OV19
 -->
