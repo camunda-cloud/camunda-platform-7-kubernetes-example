@@ -5,11 +5,12 @@ Are you running Kubernetes now? Ready to move your Camunda BPM instances off of 
 # TODOS
 
 - Update documentation to point to github
-- send to josh for review
-- Publish docker image and edit location to latest
-- TODO rewrite image name
-- TODO rewrite repo links
-- Need to scrub camunda-cloud-240911 from files
+- Send to josh for review
+- Rewrite repo links
+- Rewrite image name
+	- Need to scrub camunda-cloud-240911 from files
+	- Publish docker image and edit location to latest
+
 
 ## Authors
 
@@ -316,7 +317,7 @@ github.com/afirth/camunda-examples/camunda-bpm-kubernetes
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNTEyMTY3ODM0LC0xMTgxODM3OTI2LC0xNT
-M3ODkxMzk4LC0xNjY3NzQwNDgyLDEyMTk0NDAzNzYsNjMwMTc0
-NTk5XX0=
+eyJoaXN0b3J5IjpbMTQ4MDY5MjIxNiwtMTE4MTgzNzkyNiwtMT
+UzNzg5MTM5OCwtMTY2Nzc0MDQ4MiwxMjE5NDQwMzc2LDYzMDE3
+NDU5OV19
 -->
