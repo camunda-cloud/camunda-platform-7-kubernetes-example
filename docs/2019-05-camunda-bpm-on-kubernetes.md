@@ -234,17 +234,16 @@ If you've followed along so far, you'll need to:
 1. edit the image names in skaffold.yaml and kustomize.yaml to something you can push to
 2. [optional] set the hostname in site-data.yaml to something pointing at your ingress load balancer
 3. then `make skaffold` should bring up an accessible instance at `<hostname>/camunda`
-	- if you're not using edit the build steps in skaffold.yaml if you're not using google cloud build
+	- if you're not using google cloud build, either:
+		- edit the build steps in skaffold.yaml to build with something else
+		- build and push your image another way, then `make` to skip skaffold and use kustomize only
 
 
-if you didn't expose the ingress via a public URL, you can port forward from localhost
-
+if you didn't expose the ingress via a public URL, you can port forward from localhost:
 `kubectl port-forward -n camunda-bpm-demo svc/camunda-bpm 8080:8080`
-
 and browse to `localhost:8080/camunda`
 
-Give tomcat a few moments to come up, and cert-manager awhile to verify your domain name. You can follow the logs with your log aggregator, a tool like kubetail,
-or with just kubectl:
+Give tomcat a few moments to come up, and cert-manager awhile to verify your domain name. You can follow the logs with your log aggregator, a tool like kubetail, or with just kubectl:
 `kubectl logs -n camunda-bpm-demo $(kubectl get pods -o=name -n camunda-bpm-demo) -f`
 
 ## Next steps
@@ -317,6 +316,6 @@ github.com/afirth/camunda-examples/camunda-bpm-kubernetes
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbODc2OTk5NTY4LC0xNTM3ODkxMzk4LC0xNj
+eyJoaXN0b3J5IjpbNDQ5MTU2Mzk1LC0xNTM3ODkxMzk4LC0xNj
 Y3NzQwNDgyLDEyMTk0NDAzNzYsNjMwMTc0NTk5XX0=
 -->
