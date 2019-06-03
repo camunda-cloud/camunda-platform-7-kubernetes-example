@@ -67,11 +67,13 @@ See the Prerequisites for information on installing these packages
 ### Manifests Only Workflow
 
 (requires kubectl)
+
 If you don't want to use kustomize or skaffold, you can refer to the manifests in `generated-manifest.yaml`, and adapt them to the workflow of your choice.
 
 ### Basic Workflow
 
 (requires Kustomize>7a1a231 & kubectl)
+
 Kustomize handles overlaying the yaml files (providing similar flexibility as helm), but allowing you to extend arbitrarily rather than relying on the chart maintainer adding your particular change to the go template, or requiring you to keep a fork. Since 1.14, it's available in kubectl, but you should install it from HEAD for the time being. Kustomize generates manifests for kubectl, which we pipe through: `kustomize build | kubectl apply --dry-run -o yaml -f -` will show you whats going on (aka `make dry-run`). This doesn't build the docker image. This is the default behaviour of `make`.
 
 > **Note:** Kustomize variable handling is still relatively new. Although kustomize is now included in kubectl as `kubectl apply -k`, as of 1.14.2 you still need to `go get sigs.k8s.io/kustomize` for the `$HOSTNAME` to work. If that's not an option, you can hardcode the variable references in `ingress-patch.yaml`
@@ -88,6 +90,7 @@ kubernetes->> google cloud build: pull new image from gcr.io
 ```
 
 (requires Kustomize>7a1a231, kubectl, and Skaffold)
+
 If your workflow is currently painful, you might want to try skaffold. It has good support for a variety of templating tools (like Kustomize and Helm), CI and build tools, and infrastructure providers. The `skaffold.yaml` included is configured for google cloud build and GKE, which provides a very easy way to get going on production grade infrastructure. You'll need to change the image name to your GCP project-id if you want to use it. Then `skaffold run` aka `make skaffold` will upload the Dockerfile context to cloudbuild, build the image and save it to GCR, then apply the manifests to your cluster. You still need kustomize from HEAD. This is the behaviour of `make skaffold`, but Skaffold has many other capabilities.
 
 ## Prerequisites
@@ -324,7 +327,7 @@ eyJwcm9wZXJ0aWVzIjoidGl0bGU6IFJ1bm5pbmcgQ2FtdW5kYS
 BCUE0gb24gS3ViZXJuZXRlc1xuYXV0aG9yOiBBbGFzdGFpciBG
 aXJ0aFxudGFnczogQ2FtdW5kYSBLdWJlcm5ldGVzIEs4UyBDbG
 91ZG5hdGl2ZSBQcm9tZXRoZXVzXG5kYXRlOiAnMjAxOS0wNi0w
-MydcbiIsImhpc3RvcnkiOlsxNTYwODA4MzgxLC0xNTY3Mzk3OD
-c0LC0xMTgxODM3OTI2LC0xNTM3ODkxMzk4LC0xNjY3NzQwNDgy
-LDEyMTk0NDAzNzYsNjMwMTc0NTk5XX0=
+MydcbiIsImhpc3RvcnkiOls1Nzk5MDQ2ODMsMTU2MDgwODM4MS
+wtMTU2NzM5Nzg3NCwtMTE4MTgzNzkyNiwtMTUzNzg5MTM5OCwt
+MTY2Nzc0MDQ4MiwxMjE5NDQwMzc2LDYzMDE3NDU5OV19
 -->
