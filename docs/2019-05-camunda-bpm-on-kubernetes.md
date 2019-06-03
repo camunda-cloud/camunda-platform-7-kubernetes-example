@@ -52,7 +52,7 @@ We will go through some techniques to address these, and show a workflow that mi
 
 Three workflows are available
 1. Kustomize + Kubectl
-2. Skaffold + Kustomize + Kubectl + optionally
+2. Skaffold + Kustomize + Kubectl + optionally Google cloud build
 3. Kubectl only
 
 See the Prerequisites for information on installing these packages
@@ -232,8 +232,10 @@ If you're using [cert-manager](https://github.com/helm/charts/tree/master/stable
 
 If you've followed along so far, you'll need to:
 1. edit the image names in skaffold.yaml and kustomize.yaml to something you can push to
-1. [optional] set the hostname in site-data.yaml to something pointing at your ingress load balancer
-1. then `make skaffold` should bring up an accessible instance at `<hostname>/camunda`
+2. [optional] set the hostname in site-data.yaml to something pointing at your ingress load balancer
+3. then `make skaffold` should bring up an accessible instance at `<hostname>/camunda`
+	- if you're not using edit the build steps in skaffold.yaml if you're not using google cloud build
+
 
 if you didn't expose the ingress via a public URL, you can port forward from localhost
 
@@ -315,6 +317,6 @@ github.com/afirth/camunda-examples/camunda-bpm-kubernetes
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTM5MjkxMTcxOCwtMTUzNzg5MTM5OCwtMT
-Y2Nzc0MDQ4MiwxMjE5NDQwMzc2LDYzMDE3NDU5OV19
+eyJoaXN0b3J5IjpbODc2OTk5NTY4LC0xNTM3ODkxMzk4LC0xNj
+Y3NzQwNDgyLDEyMTk0NDAzNzYsNjMwMTc0NTk5XX0=
 -->
