@@ -210,7 +210,9 @@ spec:
 ```
 
 > **Note:** You could also use Kustomize to patch the deployment for different environments using an overlay: (example)[https://github.com/kubernetes-sigs/kustomize/tree/master/examples/springboot].
+
 > **Note:** the use of `valueFrom: secretKeyRef`. Please use this [wonderful feature of Kubernetes](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables), even during development.
+
 You probably already have a system for manage kube secrets. If not, some options include:
 - Encrypting them with your cloud provider's KMS, and then injecting them into K8S as secrets through a CD pipeline
 - [MozillaSOPS](https://github.com/mozilla/sops)
@@ -219,30 +221,30 @@ You probably already have a system for manage kube secrets. If not, some options
 - [HashiCorp Vault](https://www.vaultproject.io/)
 - [Kustomize Secret Value Plugins](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere)
 
+## File key
+
 ```
-https://github.com/kubernetes-sigs/kustomize/tree/master/examples/springboot/overlays/staging
-.
-├── Makefile
+github.com/afirth/camunda-examples/camunda-bpm-kubernetes
+│
+├── generated-manifest.yaml       <- manifest for use without kustomize
 ├── images
 │   └── camunda-bpm
-│       └── Dockerfile
-├── ingress-patch.yaml
-├── kustomization.yaml
+│       └── Dockerfile            <- overlay docker image
+├── ingress-patch.yaml            <- site-specific ingress configuration
+├── kustomization.yaml            <- main Kustomization
+├── Makefile                      <- make targets
 ├── namespace.yaml
 ├── platform
 │   ├── config
-│   │   └── prometheus-jmx.yaml
-│   ├── deployment.yaml
-│   ├── ingress.yaml
-│   ├── kustomization.yaml
+│   │   └── prometheus-jmx.yaml   <- prometheus exporter config file
+│   ├── deployment.yaml           <- main deployment
+│   ├── ingress.yaml 
+│   ├── kustomization.yaml        <- "base" kustomization
+│   ├── service-monitor.yaml      <- example prometheus-operator configuration
 │   └── service.yaml
-├── site-data.yaml
-├── site-data.yaml.example
-└── skaffold.yaml
+├── site-data.yaml                <- $(HOSTNAME) variable generator
+└── skaffold.yaml                 <- skaffold directives
 ```
-
-
-
 
 ## Questions?
 Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
