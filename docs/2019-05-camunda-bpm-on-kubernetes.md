@@ -8,22 +8,23 @@
 - Need to scrub camunda-cloud-240911 from files
 - Note about prometheus configuration servicemonitors
 
- ## Authors
+# Running Camunda BPM on Kubernetes
 
-[Alastair Firth](https://github.com/afirth) is a Senior Site Reliability Engineer on the Camunda Cloud team.
-[Lars Lange](https://github.com/Langleu) is a Devops Engineer at Camunda.
+Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs.
 
-Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs. A working knowledge of Kubernetes is assumed.
+## Authors
+
+- [Alastair Firth](https://github.com/afirth) is a Senior Site Reliability Engineer on the Camunda Cloud team.
+- [Lars Lange](https://github.com/Langleu) is a Devops Engineer at Camunda.
 
 ## TL:DR;
 
 ```
+go get sigs.k8s.io/kustomize
 git clone https://github.com/afirth/camunda-examples.git
 cd camunda-examples/camunda-bpm-demo
 make
 ```
-
-If you get errors please install Kustomize from HEAD (see prereqs)
 
 # What is Camunda BPM
 
@@ -59,6 +60,11 @@ See the Prerequisites for information on installing these packages
 
 > **Note:** Using Enterprise? See [here](https://docs.camunda.org/manual/7.11/installation/docker/) and update the image references accordingly.
 
+### Manifests Only Workflow
+
+(requires kubectl)
+If you don't want to use kustomize or skaffold, you can refer to the manifests in `generated-manifest.yaml`, and adapt them to the workflow of your choice.
+
 ### Basic Workflow
 
 (requires Kustomize>7a1a231 & kubectl)
@@ -78,12 +84,7 @@ kubernetes->> google cloud build: pull new image from gcr.io
 ```
 
 (requires Kustomize>7a1a231, kubectl, and Skaffold)
-If your workflow is currently painful, you might want to try skaffold. It has good support for a variety of templating tools (like Kustomize and Helm), CI and build tools, and infrastructure providers. The `skaffold.yaml` included is configured for google cloud build and GKE, which provides a very easy way to get going on production grade infrastructure. You'll need to change the image name to your GCP project-id if you want to use it. Then `skaffold run` aka `make skaffold` will upload the Dockerfile context to cloudbuild, build the image and save it to GCR, then apply the manifests to your cluster. You still need kustomize from HEAD. This is the behaviour of `make skaffold`, but skaffold has many other capabilities.
-
-### Manifests Only Workflow
-
-(requires kubectl)
-If you don't want to use kustomize or skaffold, you can refer to the manifests in `generated-manifest.yaml`, and adapt them to the workflow of your choice.
+If your workflow is currently painful, you might want to try skaffold. It has good support for a variety of templating tools (like Kustomize and Helm), CI and build tools, and infrastructure providers. The `skaffold.yaml` included is configured for google cloud build and GKE, which provides a very easy way to get going on production grade infrastructure. You'll need to change the image name to your GCP project-id if you want to use it. Then `skaffold run` aka `make skaffold` will upload the Dockerfile context to cloudbuild, build the image and save it to GCR, then apply the manifests to your cluster. You still need kustomize from HEAD. This is the behaviour of `make skaffold`, but Skaffold has many other capabilities.
 
 ## Prerequisites
 
@@ -91,12 +92,12 @@ If you don't want to use kustomize or skaffold, you can refer to the manifests i
   - [GKE](https://cloud.google.com/free/) or minikube are a good way to get started
 - [Optional] [Kustomize > 7a1a231](https://github.com/kubernetes-sigs/kustomize) for managing yaml overlays without forking the whole manifest, allowing you to `git pull --rebase` future improvements
   - Variable support in the ingress was added after 2.0.3 was released, so for now make sure that [go installed binaries are available on your PATH](https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a) and `go get sigs.k8s.io/kustomize`
- - [Optional] [Skaffold](https://skaffold.dev/) for building your own docker images and deploying easily to GKE
-   - download the latest release
-     - `curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
-&& chmod +x skaffold && sudo mv skaffold /usr/local/bin`
-    - if you're using [google cloud build](https://console.cloud.google.com/cloud-build/), then
-     - `gcloud auth application-default login`
+- [Optional] [Skaffold](https://skaffold.dev/) for building your own docker images and deploying easily to GKE
+  - download the latest release
+    - `curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
+ && chmod +x skaffold && sudo mv skaffold /usr/local/bin`
+  - if you're using [google cloud build](https://console.cloud.google.com/cloud-build/), then
+    - `gcloud auth application-default login`
   - otherwise configure `skaffold.yaml` for your providers
 
 ## Logs and Metrics
@@ -118,6 +119,7 @@ ENV CATALINA_OPTS -javaagent:lib/jmx_prometheus_javaagent-0.11.0.jar=9404:/etc/c
 Well that was easy. The exporter will monitor tomcat and expose it's metrics in Prometheus format at `<svc>:9404/metrics`
 
 #### Configure the exporter
+
 The sharp-eyed reader may wonder where `prometheus-jmx.yaml` is coming from. There are many different things that can run in a JVM, and tomcat is just one of them, so the exporter needs some configuration. Standard configurations for tomcat, wildfly, kafka, etc are available [here](https://github.com/prometheus/jmx_exporter/tree/master/example_configs). We'll add the tomcat one as a [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/) in Kubernetes, and then mount it as a volume.
 
 First, we add the tomcat-flavored exporter config file to our `platform/config/` directory:
@@ -164,6 +166,7 @@ spec:
 Nice. If your Prometheus isn't configured to scrape everything, you may need to tell it to scrape the pods. Prometheus-operator users can use `service-monitor.yaml` to get started. See `service-monitor.yaml`, [operator design](https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md#servicemonitor) and [spec](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitorspec) to get started.
 
 #### Going further
+
 All files we add to the ConfigMapGenerator will be exposed in the new `/etc/config` directory. You can extend this pattern to mount any other configuration files you need. You can even mount a new startup script. You can use the [subpath](https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath) oubject to mount a single fileIf you find yourself needing to update xml files in place, please consider using [xmlstarlet](http://xmlstar.sourceforge.net/docs.php) instead of sed. It's already included in the image.
 
 ### Logs
@@ -178,17 +181,46 @@ We use Google Cloud SQL, with the cloudsql-proxy in front of it for some interna
 Regardless of the database you choose, unless it's H2 you'll need to set the appropriate environment variables in `platform/deployment.yaml`. This might look something like:
 
 ```
+-- platform/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+[...]
+spec:
+  template:
+    spec:
+    [...]
+      containers:
+        - name: camunda-bpm
+          env:
+            - name: DB_DRIVER
+              value: org.postgresql.Driver
+            - name: DB_URL
+              value: jdbc:postgresql://postgres-proxy.db:5432/process-engine
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: cambpm-db-credentials
+                  key: db_username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cambpm-db-credentials
+                  key: db_password
+[...]
 ```
 
+> **Note:** You could also use Kustomize to patch the deployment for different environments using an overlay: (example)[https://github.com/kubernetes-sigs/kustomize/tree/master/examples/springboot].
+> **Note:** the use of `valueFrom: secretKeyRef`. Please use this [wonderful feature of Kubernetes](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables), even during development.
 You probably already have a system for manage kube secrets. If not, some options include:
- - [SOPS](https://github.com/mozilla/sops)
-    - this can work very well in combination with Kustomize secret generators
-    - lots of other tools like dotGPG do a similar job
- - [HashiCorp Vault](https://www.vaultproject.io/)
- - Encrypting them with your cloud provider's KMS, and then injecting them into K8S as secrets through a CD pipeline
- - [Kustomize Secret Value Plugins](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere)
+- Encrypting them with your cloud provider's KMS, and then injecting them into K8S as secrets through a CD pipeline
+- [MozillaSOPS](https://github.com/mozilla/sops)
+  - this can work very well in combination with Kustomize secret generators
+  - lots of other tools like dotGPG do a similar job
+- [HashiCorp Vault](https://www.vaultproject.io/)
+- [Kustomize Secret Value Plugins](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/secretGeneratorPlugin.md#secret-values-from-anywhere)
 
 ```
+https://github.com/kubernetes-sigs/kustomize/tree/master/examples/springboot/overlays/staging
 .
 ├── Makefile
 ├── images
