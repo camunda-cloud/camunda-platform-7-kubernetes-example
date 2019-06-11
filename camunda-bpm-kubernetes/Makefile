@@ -8,6 +8,8 @@ SHELL = /bin/bash
 
 mfst := ./generated-manifest.yaml
 
+export GCLOUD_PROJECT := $(shell gcloud config get-value project 2>/dev/null)
+
 .PHONY: all
 all: deps manifests apply
 
@@ -26,6 +28,7 @@ dry-run: deps manifests
 
 .PHONY: skaffold
 skaffold: dev-deps manifests
+	envsubst < skaffold.yaml.tmpl > skaffold.yaml
 	skaffold run
 
 .PHONY: deps

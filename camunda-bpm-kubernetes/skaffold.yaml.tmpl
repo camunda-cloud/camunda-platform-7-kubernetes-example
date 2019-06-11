@@ -1,8 +1,9 @@
+# This file is templated by `make skaffold`
 apiVersion: skaffold/v1beta11
 kind: Config
 build:
   artifacts:
-  - image: gcr.io/camunda-cloud-240911/camunda-bpm-k8s-demo
+  - image: gcr.io/${GCLOUD_PROJECT}/camunda-bpm-k8s-demo
     context: ./images/camunda-bpm
   googleCloudBuild: {}
   tagPolicy:
