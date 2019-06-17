@@ -1,3 +1,4 @@
 # files templated with envsubst
 /skaffold.yaml
 /kustomization.yaml
+/ingress-patch.yaml
