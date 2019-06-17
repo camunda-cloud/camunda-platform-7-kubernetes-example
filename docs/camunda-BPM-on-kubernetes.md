@@ -1,15 +1,24 @@
+---
+author: "Alastair Firth, Lars Lange"
+
+categories:
+  - "Community"
+
+tags:
+  - "Kubernetes"
+
+title: "Camunda BPM on Kubernetes"
+date: 2019-06-17T14:45:00Z
+
+---
+
 # Running Camunda BPM on Kubernetes
 
 Are you running Kubernetes now? Ready to move your Camunda BPM instances off of VMs, or just try it out on Kubernetes? We will address some common configurations and provide some building blocks you can tailor to your particular needs.
 
-# TODOS
+### Skill level: Intermediate
 
-- Update documentation to point to github
-- Send to josh for review
-- Rewrite repo links
-- Rewrite image name
-	- Need to scrub camunda-cloud-240911 from files
-	- Publish docker image and edit location to latest
+You've used Kubernetes before. If not, why not try a [tutorial](https://kubernetes.io/docs/tutorials/kubernetes-basics/) and spin up your first cluster?
 
 
 ## Authors
@@ -20,15 +29,12 @@ Are you running Kubernetes now? Ready to move your Camunda BPM instances off of 
 ## TL:DR;
 
 ```
-go get sigs.k8s.io/kustomize
-git clone https://github.com/afirth/camunda-examples.git
+git clone https://github.com/camunda-cloud/camunda-examples.git
 cd camunda-examples/camunda-bpm-demo
-make
+make skaffold
 ```
 
-### Skill level: Intermediate
-
-You've used Kubernetes before. If not, why not try a [tutorial](https://kubernetes.io/docs/tutorials/kubernetes-basics/) and spin up your first cluster?
+Ok that probably didn't work unless you have skaffold and kustomize installed. Read on!
 
 # What is Camunda BPM
 
@@ -53,59 +59,45 @@ We'll address several areas where we can configure the Camunda BPM docker image 
 
 We will go through some techniques to address these, and show a workflow that might work for you.
 
-## Workflows
-
-Three workflows are available
-1. Kustomize + Kubectl
-2. Skaffold + Kustomize + Kubectl + optionally Google cloud build
-3. Kubectl only
-
-See the Prerequisites for information on installing these packages
-
 > **Note:** Using Enterprise? See [here](https://docs.camunda.org/manual/7.11/installation/docker/) and update the image references accordingly.
 
-### Manifests Only Workflow
-
-(requires kubectl)
-
-If you don't want to use kustomize or skaffold, you can refer to the manifests in `generated-manifest.yaml`, and adapt them to the workflow of your choice.
-
-### Basic Workflow
-
-(requires Kustomize>7a1a231 & kubectl)
-
-Kustomize handles overlaying the yaml files (providing similar flexibility as helm), but allowing you to extend arbitrarily rather than relying on the chart maintainer adding your particular change to the go template, or requiring you to keep a fork. Since 1.14, it's available in kubectl, but you should install it from HEAD for the time being. Kustomize generates manifests for kubectl, which we pipe through: `kustomize build | kubectl apply --dry-run -o yaml -f -` will show you whats going on (aka `make dry-run`). This doesn't build the docker image. This is the default behaviour of `make`.
-
-> **Note:** Kustomize variable handling is still relatively new. Although kustomize is now included in kubectl as `kubectl apply -k`, as of 1.14.2 you still need to `go get sigs.k8s.io/kustomize` for the `$HOSTNAME` to work. If that's not an option, you can hardcode the variable references in `ingress-patch.yaml`
 
 ### Development Workflow
 
-```mermaid
-sequenceDiagram
-skaffold->> google cloud build: upload Dockerfile & context
-google cloud build-->> skaffold: return built image tag
-skaffold->> kustomize: rewrite manifests with new tag
-kustomize->> kubernetes: upload manifests
-kubernetes->> google cloud build: pull new image from gcr.io
-```
+{{< figure src="https://github.com/camunda-cloud/camunda-examples/raw/master/docs/images/dev-sequence.png" title="Development Workflow" >}}
 
-(requires Kustomize>7a1a231, kubectl, and Skaffold)
+For this demo, we'll use Skaffold to build docker images with google cloud build. It has good support for a variety of templating tools (like Kustomize and Helm), CI and build tools, and infrastructure providers. The `skaffold.yaml.tmpl` included is configured for google cloud build and GKE, which provides a very easy way to get going on production grade infrastructure.
 
-If your workflow is currently painful, you might want to try skaffold. It has good support for a variety of templating tools (like Kustomize and Helm), CI and build tools, and infrastructure providers. The `skaffold.yaml` included is configured for google cloud build and GKE, which provides a very easy way to get going on production grade infrastructure. You'll need to change the image name to your GCP project-id if you want to use it. Then `skaffold run` aka `make skaffold` will upload the Dockerfile context to cloudbuild, build the image and save it to GCR, then apply the manifests to your cluster. You still need kustomize from HEAD. This is the behaviour of `make skaffold`, but Skaffold has many other capabilities.
+`make skaffold` will upload the Dockerfile context to cloudbuild, build the image and save it to your project's GCR, then apply the manifests to your cluster. This is the behaviour of `make skaffold`, but Skaffold has many other capabilities.
+
+For Kubernetes yaml templating we're using kustomize for managing yaml overlays without forking the whole manifest, allowing you to `git pull --rebase` future improvements. It's now in kubectl and works well for this kind of thing.
+
+We also use envsubst to fill in a hostname and GCP project id in the `*.yaml.tmpl` files. You can see how this works in `makefile` or just follow along.
 
 ## Prerequisites
 
 - A working [Kubernetes](https://kubernetes.io/) cluster
   - [GKE](https://cloud.google.com/free/) or minikube are a good way to get started
-- [Optional] [Kustomize > 7a1a231](https://github.com/kubernetes-sigs/kustomize) for managing yaml overlays without forking the whole manifest, allowing you to `git pull --rebase` future improvements
-  - Variable support in the ingress was added after 2.0.3 was released, so for now make sure that [go installed binaries are available on your PATH](https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a) and `go get sigs.k8s.io/kustomize`
-- [Optional] [Skaffold](https://skaffold.dev/) for building your own docker images and deploying easily to GKE
+- [Kustomize](https://github.com/kubernetes-sigs/kustomize) 
+  - make sure [go installed binaries are available on your PATH](https://gist.github.com/afirth/fabc04406eb584601b473f599eb0170a) and `go get sigs.k8s.io/kustomize`
+  - alternate install options: https://github.com/kubernetes-sigs/kustomize/blob/master/docs/INSTALL.md
+- [Skaffold](https://skaffold.dev/) for building your own docker images and deploying easily to GKE
   - download the latest release
     - `curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
  && chmod +x skaffold && sudo mv skaffold /usr/local/bin`
   - if you're using [google cloud build](https://console.cloud.google.com/cloud-build/), then
     - `gcloud auth application-default login`
-  - otherwise configure `skaffold.yaml` for your providers
+  - otherwise configure `skaffold.yaml.tmpl` for your providers
+- A copy of this code
+  - `git clone https://github.com/camunda-cloud/camunda-examples.git`
+- envsubst
+  - [OSX installation](https://stackoverflow.com/a/37192554)
+  - Linux install `gettext` with your package manager
+  - used for the demo to avoid hardcoding hostnames and cloud project ids
+
+### Manifests Only Workflow
+
+If you don't want to use kustomize or skaffold, you can refer to the manifests in `generated-manifest.yaml`, and adapt them to the workflow of your choice.
 
 ## Logs and Metrics
 
@@ -114,7 +106,8 @@ Prometheus has become the standard for capturing metrics in Kubernetes. It fills
 Prometheus defaults to a pull model scraping `<service>/metrics`, and adding a sidecar container to expose this is common. Unfortunately the JMX metrics are best captured from inside the JVM, so a sidecar isn't as effective. Let's plug the [open source jmx_exporter](https://github.com/prometheus/jmx_exporter) from Prometheus into the JVM by adding it to the container image, which will expose a `/metrics` path on another port.
 
 ### Add the Prometheus jmx_exporter to the container
-```
+
+```docker
 -- images/camunda-bpm/Dockerfile
 FROM camunda/camunda-bpm-platform:tomcat-7.11.0
 
@@ -123,6 +116,7 @@ RUN wget https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaage
 #9404 is the reserved prometheus-jmx port
 ENV CATALINA_OPTS -javaagent:lib/jmx_prometheus_javaagent-0.11.0.jar=9404:/etc/config/prometheus-jmx.yaml
 ```
+
 Well that was easy. The exporter will monitor tomcat and expose it's metrics in Prometheus format at `<svc>:9404/metrics`
 
 #### Configure the exporter
@@ -135,9 +129,9 @@ First, we add the tomcat-flavored exporter config file to our `platform/config/`
 platform/config
 └── prometheus-jmx.yaml
 ```
-Then we add a [ConfigMapGenerator]([https://github.com/kubernetes-sigs/kustomize/blob/master/examples/configGeneration.md](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/configGeneration.md)) to `kustomization.yaml`:
-```
--- platform/kustomization.yaml
+Then we add a [ConfigMapGenerator]([https://github.com/kubernetes-sigs/kustomize/blob/master/examples/configGeneration.md](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/configGeneration.md)) to `kustomization.yaml.tmpl`:
+```yaml
+-- platform/kustomization.yaml.tmpl
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 [...]
@@ -149,7 +143,7 @@ configMapGenerator:
 This will add each element of `files[]` as an element of the `config` ConfigMap. ConfigMapGenerators are great because they hash the data in the config and trigger a pod restart if it changes. They also reduce the amount of configuration in the Deployment, as you can mount the whole "folder" of config files in one VolumeMount.
 
 Finally we need to mount the ConfigMap as a volume to the pod:
-```
+```yaml
 -- platform/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -170,7 +164,7 @@ spec:
               name: config
     [...]
 ```
-Nice. If your Prometheus isn't configured to scrape everything, you may need to tell it to scrape the pods. Prometheus-operator users can use `service-monitor.yaml` to get started. See `service-monitor.yaml`, [operator design](https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md#servicemonitor) and [spec](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitorspec) to get started.
+Nice. If your Prometheus isn't configured to scrape everything, you may need to tell it to scrape the pods. Prometheus-operator users can use `service-monitor.yaml` to get started. See `service-monitor.yaml`, [operator design](https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md#servicemonitor), and [spec](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitorspec) to get started.
 
 #### Extending this pattern to other use cases
 
@@ -183,11 +177,11 @@ Great news! The application logs are already available on `stdout`, for example 
 ## Database
 
 By default, the image will come up with an ephemeral H2 database. This is NOT what you want for production.
-We use Google Cloud SQL, with the cloudsql-proxy in front of it for some internal uses, and this is an easy option if you don't have a preferred database setup.On AWS, RDS provides a similar service. Setup instructions for the cloudsql-proxy on kubernetes can be found [here](https://github.com/GoogleCloudPlatform/cloudsql-proxy/blob/master/Kubernetes.md)
+We use Google Cloud SQL, with the cloudsql-proxy in front of it for some internal uses, and this is an easy option if you don't have a preferred database setup. On AWS, RDS provides a similar service. Setup instructions for the cloudsql-proxy on kubernetes can be found [here](https://github.com/GoogleCloudPlatform/cloudsql-proxy/blob/master/Kubernetes.md).
 
 Regardless of the database you choose, unless it's H2 you'll need to set the appropriate environment variables in `platform/deployment.yaml`. This might look something like:
 
-```
+```yaml
 -- platform/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -216,9 +210,9 @@ spec:
 [...]
 ```
 
-> **Note:** You could also use Kustomize to patch the deployment for different environments using an overlay: (example)[https://github.com/kubernetes-sigs/kustomize/tree/master/examples/springboot].
+> **Note:** You could also use Kustomize to patch the deployment for different environments using an overlay: [example](https://github.com/kubernetes-sigs/kustomize/tree/master/examples/springboot).
 
-> **Note:** the use of `valueFrom: secretKeyRef`. Please use this [wonderful feature of Kubernetes](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables), even during development.
+> **Note:** the use of `valueFrom: secretKeyRef`. Please use this [wonderful feature of Kubernetes](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables), even during development, to keep your secrets secure.
 
 You probably already have a system for manage kube secrets. If not, some options include:
 - Encrypting them with your cloud provider's KMS, and then injecting them into K8S as secrets through a CD pipeline
@@ -230,28 +224,25 @@ You probably already have a system for manage kube secrets. If not, some options
 
 ## Ingress
 
-Unless you just want to use localhost port forwarding, you'll need an ingress controller configured. If you're not running [ingress-nginx](https://kubernetes.github.io/ingress-nginx/) (confusingly [nginx-ingress on helm](https://github.com/helm/charts/tree/master/stable/nginx-ingress)), you probably already know that you need to go set some different annotations in `ingress-patch.yaml` or `platform/ingress.yaml`. If you are running ingress-nginx, and have it watching the `nginx` ingress class, you're all set.
+Unless you just want to use localhost port forwarding, you'll need an ingress controller configured. If you're not running [ingress-nginx](https://kubernetes.github.io/ingress-nginx/) ([helm chart](https://github.com/helm/charts/tree/master/stable/nginx-ingress)), you probably already know that you need to go set some different annotations in `ingress-patch.yaml.tmpl` or `platform/ingress.yaml`. If you are running ingress-nginx, and have it watching the `nginx` ingress class with a load balancer pointing at it and external-dns or a wildcard A record set up, you're all set. Otherwise set up an ingress controller and DNS now, or skip ahead and port forward straight to the pod.
 
 ### TLS
 
-If you're using [cert-manager](https://github.com/helm/charts/tree/master/stable/cert-manager#installing-the-chart) or kube-lego, and letsencrypt, your certificates for the new ingress should be automatically provisioned for you. Otherwise, check out `ingress-patch.yaml` and adjust to your needs.
+If you're using [cert-manager](https://github.com/helm/charts/tree/master/stable/cert-manager#installing-the-chart) or kube-lego, and letsencrypt, your certificates for the new ingress should be automatically provisioned for you. Otherwise, check out `ingress-patch.yaml.tmpl` and adjust to your needs.
 
 ## Run it!
 
-If you've followed along so far, you'll need to:
-1. edit the image names in skaffold.yaml and kustomize.yaml to something you can push to
-2. [optional] set the hostname in site-data.yaml to something pointing at your ingress load balancer
-3. if you're not using google cloud build, either:
-	- edit the build steps in skaffold.yaml to build with something else
-	- build and push your image another way, then `make` to skip skaffold and use kustomize only
-3. then `make skaffold` should bring up an accessible instance at `<hostname>/camunda`
+If you've followed along so far, `make skaffold HOSTNAME=<you.example.com>` should bring up an accessible instance at `<hostname>/camunda`
 
 If you didn't expose the ingress via a public URL, you can port forward from localhost:
 `kubectl port-forward -n camunda-bpm-demo svc/camunda-bpm 8080:8080`
 and browse to `localhost:8080/camunda`
 
 Give tomcat a few moments to come up, and cert-manager awhile to verify your domain name. You can follow the logs with your log aggregator, a tool like kubetail, or with just kubectl:
-`kubectl logs -n camunda-bpm-demo $(kubectl get pods -o=name -n camunda-bpm-demo) -f`
+
+```sh
+kubectl logs -n camunda-bpm-demo $(kubectl get pods -o=name -n camunda-bpm-demo) -f
+```
 
 ## Next steps
 
@@ -261,9 +252,9 @@ This is more in the "configuring Camunda BPM" bucket than specific to Kubernetes
 
 ### Session management
 
-Like many other applications, Camunda BPM handles sessions at the JVM, so if you want to run multiple replicas you can either enable sticky sessions, [(example for ingress-nginx)](https://kubernetes.github.io/ingress-nginx/examples/affinity/cookie/), which will survive until the replica goes away or the cookie's `Max-Age`, or for a more robust solution you can deploy a session manager into tomcat. Lars is working on a separate post about this topic, but something like:
+Like many other applications, Camunda BPM handles sessions at the JVM, so if you want to run multiple replicas you can either enable sticky sessions, [(example for ingress-nginx)](https://kubernetes.github.io/ingress-nginx/examples/affinity/cookie/), which will survive until the replica goes away or the cookie's `Max-Age`, or for a more robust solution you can deploy a session manager into tomcat. Lars has a [separate post](https://blog.camunda.com/post/2019/06/camunda-bpm-with-session-manager/) about this topic, but something like:
 
-```
+```bash
 wget http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager/2.3.2/memcached-session-manager-2.3.2.jar -P lib/ && \
 wget http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager-tc9/2.3.2/memcached-session-manager-tc9-2.3.2.jar -P lib/ && \
 
@@ -287,7 +278,7 @@ If you have sessions sorted out, the first (and often last) limit for scaling Ca
 
 ### Requests and Limits
 
-In `platform/deployment.yaml` you'll see we have hardcoded the resource field. This works well with HPA, but you may need to tune them. A kustomize patch will work well for this. See `ingress-patch.yaml` and `./kustomization.yaml` for an example.
+In `platform/deployment.yaml` you'll see we have hardcoded the resource field. This works well with HPA, but you may need to tune them. A kustomize patch will work well for this. See `ingress-patch.yaml.tmpl` and `./kustomization.yaml.tmpl` for an example.
 
 # Conclusion
 
@@ -298,36 +289,29 @@ We've set up Camunda BPM on Kubernetes with Prometheus metrics, logs, an ephemer
 ## File Map
 
 ```
-github.com/afirth/camunda-examples/camunda-bpm-kubernetes
+github.com/camunda-cloud/camunda-examples/camunda-bpm-kubernetes
 │
 ├── generated-manifest.yaml       <- manifest for use without kustomize
 ├── images
 │   └── camunda-bpm
 │       └── Dockerfile            <- overlay docker image
-├── ingress-patch.yaml            <- site-specific ingress configuration
-├── kustomization.yaml            <- main Kustomization
+├── ingress-patch.yaml.tmpl       <- site-specific ingress configuration
+├── kustomization.yaml.tmpl       <- main Kustomization
 ├── Makefile                      <- make targets
 ├── namespace.yaml
 ├── platform
 │   ├── config
 │   │   └── prometheus-jmx.yaml   <- prometheus exporter config file
 │   ├── deployment.yaml           <- main deployment
-│   ├── ingress.yaml 
+│   ├── ingress.yaml
 │   ├── kustomization.yaml        <- "base" kustomization
-│   ├── service-monitor.yaml      <- example prometheus-operator configuration
+│   ├── service-monitor.yaml      <- example prometheus-operator config
 │   └── service.yaml
-├── site-data.yaml                <- $(HOSTNAME) variable generator
-└── skaffold.yaml                 <- skaffold directives
+└── skaffold.yaml.tmpl            <- skaffold directives
 ```
 
 ## Questions?
-Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!  Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
-<!--stackedit_data:
-eyJwcm9wZXJ0aWVzIjoidGl0bGU6IFJ1bm5pbmcgQ2FtdW5kYS
-BCUE0gb24gS3ViZXJuZXRlc1xuYXV0aG9yOiBBbGFzdGFpciBG
-aXJ0aFxudGFnczogQ2FtdW5kYSBLdWJlcm5ldGVzIEs4UyBDbG
-91ZG5hdGl2ZSBQcm9tZXRoZXVzXG5kYXRlOiAnMjAxOS0wNi0w
-MydcbiIsImhpc3RvcnkiOls1Nzk5MDQ2ODMsMTU2MDgwODM4MS
-wtMTU2NzM5Nzg3NCwtMTE4MTgzNzkyNiwtMTUzNzg5MTM5OCwt
-MTY2Nzc0MDQ4MiwxMjE5NDQwMzc2LDYzMDE3NDU5OV19
--->
+
+Please ask questions specific to Camunda on our [forum](http://forum.camunda.org)!
+
+Questions about Kubernetes may be better asked on the [k8s slack](https://slack.k8s.io/).
