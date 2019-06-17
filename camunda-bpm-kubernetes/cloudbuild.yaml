@@ -12,6 +12,6 @@ steps:
             '--cache-from', 'gcr.io/$PROJECT_ID/camunda-bpm-k8s-demo:latest',
             '.'
         ]
-  dir: 'images/camunda-bpm'
+  dir: 'camunda-bpm-kubernetes/images/camunda-bpm'
 images:
 - 'gcr.io/$PROJECT_ID/camunda-bpm-k8s-demo:latest'
